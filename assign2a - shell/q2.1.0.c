@@ -143,6 +143,13 @@ int executeCdCommand(char *arg)
   arg = strcat("/", arg);
   status = chdir(arg);
   
+  if(status!=0)
+  {
+    perror("Error:");
+    return -1;
+  }
+  else
+    return 0;
 }
 
 void printArgumentError(){
