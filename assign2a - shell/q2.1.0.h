@@ -6,10 +6,10 @@
 #define LS          5
 #define CP          6
 #define EXIT        -1
-#define NO_SUCH_BUILTIN 0
+#define NO_SUCH_BUILTIN -2
 
 int processBuiltInCommand(char *, int *);
-void executeBuiltInCommand(int);
+//void executeBuiltInCommand(int);
 int executeCdCommand(char *);
 int executePwdCommand();
 int executeMkdirCommand(char *);
