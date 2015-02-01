@@ -50,20 +50,74 @@ int main(int argc, char *argv[])
 
 int processBuiltInCommand(char * cmd, int *comm)
 {
-  if( strncmp(cmd, "exit", strlen("exit")) == 0)
-    *comm = EXIT;
-  else if( strncmp(cmd, "pwd", strlen("pwd")) == 0)
-    *comm = PWD;
-  else if( strncmp(cmd, "ls", strlen("ls")) == 0)
-    *comm = LS;
-  else if( strncmp(cmd, "cd", strlen("cd")) == 0)
-    *comm = CD;
-  else if( strncmp(cmd, "cp", strlen("cp")) == 0)
-    *comm = CP;
-  else if( strncmp(cmd, "mkdir", strlen("mkdir")) == 0)
-    *comm = MKDIR;
-  else if( strncmp(cmd, "rmdir", strlen("rmdir")) == 0)
-    *comm = RMDIR;
+  if( strncmp(cmd, "exit", strlen("exit")) == 0){
+    char * arg0 = strtok (str," ,.-");
+    char * arg1 = strtok (NULL," ,.-");
+    if(arg1 != NULL){
+      printArgumentError();
+      return 0;
+      }
+    return executeExitCommand();
+    }
+  else if( strncmp(cmd, "pwd", strlen("pwd")) == 0){
+    char * arg0 = strtok (str," ,.-");
+    char * arg1 = strtok (NULL," ,.-");
+    if(arg1 != NULL){
+      printArgumentError();
+      return 0;
+      }
+      return executePwdCommand();
+    }
+  else if( strncmp(cmd, "ls", strlen("ls")) == 0){
+    char * arg0 = strtok (str," ,.-");
+    char * arg1 = strtok (NULL," ,.-");
+    if(arg1 != NULL){
+      printArgumentError();
+      return 0;
+      }
+      return executeLsCommand();
+    }
+  else if( strncmp(cmd, "cd", strlen("cd")) == 0){
+    char * arg0 = strtok (str," ,.-");
+    char * arg1 = strtok (NULL," ,.-");
+    char * arg2 = strtok (NULL," ,.-");
+    if(arg2 != NULL){
+      printArgumentError();
+      return 0;
+      }
+      return executeCdCommand(arg1);
+    }
+  else if( strncmp(cmd, "cp", strlen("cp")) == 0){
+    char * arg0 = strtok (str," ,.-");
+    char * arg1 = strtok (NULL," ,.-");
+    char * arg2 = strtok (NULL," ,.-");
+    char * arg3 = strtok (NULL," ,.-");
+    if(arg3 != NULL){
+      printArgumentError();
+      return 0;
+      }
+      return executeCpCommand(arg1,arg2);
+    }
+  else if( strncmp(cmd, "mkdir", strlen("mkdir")) == 0){
+    char * arg0 = strtok (str," ,.-");
+    char * arg1 = strtok (NULL," ,.-");
+    char * arg2 = strtok (NULL," ,.-");
+    if(arg2 != NULL){
+      printArgumentError();
+      return 0;
+      }
+      return executeMkdirCommand(arg1);
+    }
+  else if( strncmp(cmd, "rmdir", strlen("rmdir")) == 0){
+    char * arg0 = strtok (str," ,.-");
+    char * arg1 = strtok (NULL," ,.-");
+    char * arg2 = strtok (NULL," ,.-");
+    if(arg2 != NULL){
+      printArgumentError();
+      return 0;
+      }
+      return executeRmdirCommand(arg1);
+    }
   else
     *comm = NO_SUCH_BUILTIN;
 
@@ -90,3 +144,7 @@ int executeCdCommand(char *arg)
   status = chdir(arg);
   
 }
+
+void printArgumentError(){
+  printf("Argument Mismatch");
+  }

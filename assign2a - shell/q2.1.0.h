@@ -17,3 +17,4 @@ int executeRmdirCommand(char *);
 int executeLsCommand();
 int executeCpCommand(char *, char*);
 int executeExitCommand();
+void printArgumentError();
