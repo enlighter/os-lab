@@ -143,7 +143,7 @@ int executeCdCommand(char *arg)
   printf("++++> %s\n", destination);
   strcat(destination, arg);
   printf("++++> %s\n",destination);
-  status = chdir(destination);
+  status = chdir(arg);
   
   if(status!=0)
   {
