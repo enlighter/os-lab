@@ -15,6 +15,7 @@ int executePwdCommand();
 int executeMkdirCommand(char *);
 int executeRmdirCommand(char *);
 int executeLsCommand();
+int executeLsMinusLCommand();
 int executeCpCommand(char *, char*);
 int executeExitCommand();
 void printArgumentError();
