@@ -145,6 +145,36 @@ int executeCdCommand(char *arg)
   
 }
 
+int executePwdCommand(){
+
+return 0;
+}
+
+int executeMkdirCommand(char * arg){
+
+return 0;
+}
+
+int executeRmdirCommand(char * arg){
+
+return 0;
+}
+
+int executeLsCommand(){
+
+return 0;
+}
+
+int executeCpCommand(char * arg1, char* arg2){
+
+return 0;
+}
+
+int executeExitCommand(){
+
+return 0;
+}
+
 void printArgumentError(){
   printf("Argument Mismatch");
-  }
+}
