@@ -9,19 +9,9 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 //#include <sys/stat.h>
+#include "q2.1.0.h"
 
-#define MAX_LENGTH  1024
-#define CD          1
-#define PWD         2
-#define MKDIR       3
-#define RMDIR       4
-#define LS          5
-#define CP          6
-#define EXIT        -1
-#define NO_SUCH_BUILTIN 0
 
-int isBuiltInCommand(char *, int *);
-void executeBuiltInCommand(int);
 
 int main(int argc, char *argv[]) 
 {
