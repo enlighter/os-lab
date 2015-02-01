@@ -139,9 +139,14 @@ void executeBuiltInCommand(int execute)
 int executeCdCommand(char *arg)
 {
   int status=0;
+  char destination[40] ;
+  printf("++++> %s\n",arg);
 
-  arg = strcat("/", arg);
-  status = chdir(arg);
+  strcpy(destination, "/");
+  printf("++++> %s\n", destination);
+  strcat(destination, arg);
+  printf("++++> %s\n",destination);
+  status = chdir(destination);
   
   if(status!=0)
   {
