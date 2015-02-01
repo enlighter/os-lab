@@ -129,10 +129,17 @@ int processBuiltInCommand(char * cmd, int *comm)
 int executeCdCommand(char *arg)
 {
   int status=0;
-  char destination[40] ;
+  char destination[MAX_LENGTH], currPos[MAX_LENGTH] ;
   printf("++++> %s\n",arg);
 
-  strcpy(destination, "/");
+  if(getcwd(currPos, sizeof(currPos)) != NULL)
+      printf("++> %s\n", currPos);
+  else
+  {
+      perror("getcwd() error");
+  }
+  strcpy(destination, currPos);
+  strcat(destination, "/");
   printf("++++> %s\n", destination);
   strcat(destination, arg);
   printf("++++> %s\n",destination);
