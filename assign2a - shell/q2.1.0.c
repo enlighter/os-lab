@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 
     if (!fgets(line, MAX_LENGTH, stdin)) break;
     //system(line);
-    if (isBuiltInCommand(line, &command) != 0)
+    if (processBuiltInCommand(line, &command) != 0)
     {
       //printf("command = %d",command);
       executeBuiltInCommand(command);
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-int isBuiltInCommand(char * cmd, int *comm)
+int processBuiltInCommand(char * cmd, int *comm)
 {
   if( strncmp(cmd, "exit", strlen("exit")) == 0)
     *comm = EXIT;
