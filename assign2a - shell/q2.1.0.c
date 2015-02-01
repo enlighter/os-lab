@@ -8,7 +8,11 @@
 #include <sys/mman.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-//#include <sys/stat.h>
+#include <sys/stat.h>
+#include <pwd.h>
+#include <grp.h>
+#include <time.h>
+#include <dirent.h>
 #include "q2.1.0.h"
 
 
@@ -55,7 +59,7 @@ int processBuiltInCommand(char * cmd, int *comm)
     char * arg1 = strtok (NULL," ");
     if(arg1 != NULL){
       printArgumentError();
-      return 0;
+      return -1;
       }
     return executeExitCommand();
     }
@@ -64,7 +68,7 @@ int processBuiltInCommand(char * cmd, int *comm)
     char * arg1 = strtok (NULL," ");
     if(arg1 != NULL){
       printArgumentError();
-      return 0;
+      return -1;
       }
       return executePwdCommand();
     }
@@ -72,9 +76,12 @@ int processBuiltInCommand(char * cmd, int *comm)
     char * arg0 = strtok (cmd," ");
     char * arg1 = strtok (NULL," ");
     char * arg2 = strtok (NULL," ");
-    if(arg1 != NULL){
+    if(arg1 != NULL ){
+      if(strncmp(arg1, "-l", strlen("-l")) == 0 ){
+        return executeLsMinusLCommand();
+      }
       printArgumentError();
-      return 0;
+      return -1;
       }
 
       return executeLsCommand();
@@ -85,7 +92,7 @@ int processBuiltInCommand(char * cmd, int *comm)
     char * arg2 = strtok (NULL," ");
     if(arg2 != NULL || arg1 == NULL){
       printArgumentError();
-      return 0;
+      return -1;
       }
       return executeCdCommand(arg1);
     }
@@ -96,7 +103,7 @@ int processBuiltInCommand(char * cmd, int *comm)
     char * arg3 = strtok (NULL," ");
     if(arg3 != NULL){
       printArgumentError();
-      return 0;
+      return -1;
       }
       return executeCpCommand(arg1,arg2);
     }
@@ -106,7 +113,7 @@ int processBuiltInCommand(char * cmd, int *comm)
     char * arg2 = strtok (NULL," ");
     if(arg2 != NULL){
       printArgumentError();
-      return 0;
+      return -1;
       }
       return executeMkdirCommand(arg1);
     }
@@ -116,7 +123,7 @@ int processBuiltInCommand(char * cmd, int *comm)
     char * arg2 = strtok (NULL," ");
     if(arg2 != NULL){
       printArgumentError();
-      return 0;
+      return -1;
       }
       return executeRmdirCommand(arg1);
     }
@@ -176,7 +183,75 @@ int executeRmdirCommand(char * arg){
 }
 
 int executeLsCommand(){
+  char cwd[MAX_LENGTH];
+  DIR *dp;
+  dp=opendir(getcwd(cwd, sizeof(cwd)));
 
+  struct dirent *sd;
+  while((sd=readdir(dp))!=NULL)
+  {
+    printf("%s\t",sd->d_name);
+  }
+  printf("\n");
+  closedir(dp);
+  return 0;
+}
+
+int executeLsMinusLCommand(){
+  char cwd[MAX_LENGTH];
+  DIR *dp;
+  dp=opendir(getcwd(cwd, sizeof(cwd))); 
+
+  struct dirent *sd; 
+  struct stat buf;
+  struct passwd *p;
+  struct group *g;
+  struct tm *t;
+
+  char time[26];
+  char P[10]="rwxrwxrwx",AP[10]=" ";
+  int i,j;
+  while((sd=readdir(dp)) != NULL)
+  {
+    stat(sd->d_name,&buf);
+  
+    // File Type
+    if(S_ISDIR(buf.st_mode))
+      printf("d");
+    else if(S_ISREG(buf.st_mode))
+      printf("-");
+    else if(S_ISCHR(buf.st_mode))
+      printf("c");
+    else if(S_ISBLK(buf.st_mode))
+      printf("b");
+    else if(S_ISLNK(buf.st_mode))
+      printf("l");
+    else if(S_ISFIFO(buf.st_mode))
+      printf("p");
+    else if(S_ISSOCK(buf.st_mode))
+      printf("s");
+    //File Permissions P-Full Permissions AP-Actual Permissions
+    for(i=0,j=(1<<8);i<9;i++,j>>=1)
+      AP[i]= (buf.st_mode & j ) ? P[i] : '-' ;
+    printf("%s",AP);
+    //No. of Hard Links
+    printf("%5d",buf.st_nlink);
+    //User Name
+    p=getpwuid(buf.st_uid);
+    printf(" %.8s",p->pw_name);
+    //Group Name
+    g=getgrgid(buf.st_gid);
+    printf(" %-8.8s",g->gr_name);
+    //File Size
+    printf(" %8d",buf.st_size);
+    //Date and Time of modification
+    t=localtime(&buf.st_mtime);
+    strftime(time,sizeof(time),"%b %d %H:%M",t);
+    printf(" %s",time);
+    //File Name
+    printf(" %s\n",sd->d_name);
+  }
+  closedir(dp);
   return 0;
 }
 
