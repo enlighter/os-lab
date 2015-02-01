@@ -33,10 +33,10 @@ int main(int argc, char *argv[])
 
     if (!fgets(line, MAX_LENGTH, stdin)) break;
     //system(line);
-    if (processBuiltInCommand(line, &command) != 0)
+    if (processBuiltInCommand(line, &command) != NO_SUCH_BUILTIN)
     {
       //printf("command = %d",command);
-      executeBuiltInCommand(command);
+      //executeBuiltInCommand(command);
     }
     else
     {
@@ -119,21 +119,9 @@ int processBuiltInCommand(char * cmd, int *comm)
       return executeRmdirCommand(arg1);
     }
   else
-    *comm = NO_SUCH_BUILTIN;
+    return NO_SUCH_BUILTIN;
 
-  return *comm;
-}
-
-void executeBuiltInCommand(int execute)
-{
-  switch(execute)
-  {
-    default:
-    {
-      printf("default\n");
-      return;
-    }
-  }
+  return 0;
 }
 
 int executeCdCommand(char *arg)
@@ -153,7 +141,13 @@ int executeCdCommand(char *arg)
 }
 
 int executePwdCommand(){
-
+  char cwd[MAX_LENGTH];
+  if(getcwd(cwd, sizeof(cwd)) != NULL)
+      printf("Current Working Directory : %s\n", cwd);
+    else{
+      perror("getcwd() error");
+      return -1;
+    }
   return 0;
 }
 
