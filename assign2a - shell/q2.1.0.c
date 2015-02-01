@@ -12,7 +12,6 @@
 #include "q2.1.0.h"
 
 
-
 int main(int argc, char *argv[]) 
 {
   char line[MAX_LENGTH], cwd[MAX_LENGTH];
@@ -81,4 +80,13 @@ void executeBuiltInCommand(int execute)
       return;
     }
   }
+}
+
+int executeCdCommand(char *arg)
+{
+  int status=0;
+
+  arg = strcat("/", arg);
+  status = chdir(arg);
+  
 }
