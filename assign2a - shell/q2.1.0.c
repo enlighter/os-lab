@@ -20,8 +20,8 @@
 #define EXIT        -1
 #define NO_SUCH_BUILTIN 0
 
-int isBuiltIncommand(char *, int *);
-void executeBuiltIncommand(int);
+int isBuiltInCommand(char *, int *);
+void executeBuiltInCommand(int);
 
 int main(int argc, char *argv[]) 
 {
@@ -44,10 +44,10 @@ int main(int argc, char *argv[])
 
     if (!fgets(line, MAX_LENGTH, stdin)) break;
     //system(line);
-    if (isBuiltIncommand(line, &command) != 0)
+    if (isBuiltInCommand(line, &command) != 0)
     {
       //printf("command = %d",command);
-      executeBuiltIncommand(command);
+      executeBuiltInCommand(command);
     }
     else
     {
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-int isBuiltIncommand(char * cmd, int *comm)
+int isBuiltInCommand(char * cmd, int *comm)
 {
   if( strncmp(cmd, "exit", strlen("exit")) == 0)
     *comm = EXIT;
@@ -81,7 +81,7 @@ int isBuiltIncommand(char * cmd, int *comm)
   return *comm;
 }
 
-void executeBuiltIncommand(int execute)
+void executeBuiltInCommand(int execute)
 {
   switch(execute)
   {
