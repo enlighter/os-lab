@@ -76,13 +76,14 @@ int processBuiltInCommand(char * cmd, int *comm)
       printArgumentError();
       return 0;
       }
+
       return executeLsCommand();
     }
   else if( strncmp(cmd, "cd", strlen("cd")) == 0){
     char * arg0 = strtok (cmd," ");
     char * arg1 = strtok (NULL," ");
     char * arg2 = strtok (NULL," ");
-    if(arg2 != NULL }} arg1 == NULL){
+    if(arg2 != NULL || arg1 == NULL){
       printArgumentError();
       return 0;
       }
