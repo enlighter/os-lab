@@ -171,9 +171,10 @@ int executeMkdirCommand(char * arg){
 
   int ret=0;
   char name[20];
+  mode_t process_mask = umask(0);
 
   strncpy(name, arg, strlen(arg)-1);
-  ret = mkdir(name,S_IWUSR);
+  ret = mkdir(name, S_IRWXU | S_IRWXG | S_IRWXO);
 
   if(!ret)
   {
@@ -184,6 +185,7 @@ int executeMkdirCommand(char * arg){
     perror("Error");
   }
 
+  umask(process_mask);
   return ret;
 }
 
