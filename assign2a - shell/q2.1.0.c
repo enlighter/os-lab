@@ -1,3 +1,5 @@
+/*######### PLEASE INCLUDE THE FILE "q2.1.0.h" IN THE SAME FOLDER #########*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
