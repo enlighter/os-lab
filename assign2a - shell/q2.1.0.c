@@ -47,7 +47,8 @@ int main(int argc, char *argv[])
     else
     {
       printf("PATH: %s\n", getenv("PATH"));
-      system(line);
+      processOtherCommands();
+      //system(line);
     }
   }
 
@@ -133,6 +134,12 @@ int processBuiltInCommand(char * cmd, int *comm)
     return NO_SUCH_BUILTIN;
 
   return 0;
+}
+
+int processOtherCommand(char *execute)
+{
+  
+  return -1;
 }
 
 int executeCdCommand(char *arg)

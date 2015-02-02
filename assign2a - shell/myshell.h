@@ -9,6 +9,7 @@
 #define NO_SUCH_BUILTIN -2
 
 int processBuiltInCommand(char *, int *);
+int processOtherCommands(char *);
 //void executeBuiltInCommand(int);
 int executeCdCommand(char *);
 int executePwdCommand();
