@@ -191,7 +191,22 @@ int executeMkdirCommand(char * arg){
 
 int executeRmdirCommand(char * arg){
 
-  return 0;
+  int ret=0;
+  char name[20];
+
+  strncpy(name, arg, strlen(arg)-1);
+  ret = rmdir(name);
+
+  if(!ret)
+  {
+    printf("Directory %s deleted\n",name);
+  }
+  else
+  {
+    perror("Delete Error");
+  }
+
+  return ret;
 }
 
 int executeLsCommand(){
