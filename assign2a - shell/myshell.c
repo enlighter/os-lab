@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      //printf("Unknown command\n");
+      printf("PATH: %s\n", getenv("PATH"));
       system(line);
     }
   }
