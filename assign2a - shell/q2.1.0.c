@@ -149,7 +149,7 @@ int executeCdCommand(char *arg)
   
   if(status!=0)
   {
-    perror("Error:");
+    perror("Error");
     return -1;
   }
   else
@@ -169,7 +169,22 @@ int executePwdCommand(){
 
 int executeMkdirCommand(char * arg){
 
-  return 0;
+  int ret=0;
+  char name[20];
+
+  strncpy(name, arg, strlen(arg)-1);
+  ret = mkdir(name,S_IWUSR);
+
+  if(!ret)
+  {
+    printf("Directory %s created\n",name);
+  }
+  else
+  {
+    perror("Error");
+  }
+
+  return ret;
 }
 
 int executeRmdirCommand(char * arg){
@@ -228,17 +243,17 @@ int executeLsMinusLCommand(){
     //File Permissions P-Full Permissions AP-Actual Permissions
     for(i=0,j=(1<<8);i<9;i++,j>>=1)
       AP[i]= (buf.st_mode & j ) ? P[i] : '-' ;
-    printf("%s",AP);
+    printf("%s", AP);
     //No. of Hard Links
-    printf("%5d",buf.st_nlink);
+    printf("%5d", (int) buf.st_nlink);
     //User Name
     p=getpwuid(buf.st_uid);
-    printf(" %.8s",p->pw_name);
+    printf(" %.8s", p->pw_name);
     //Group Name
     g=getgrgid(buf.st_gid);
-    printf(" %-8.8s",g->gr_name);
+    printf(" %-8.8s", g->gr_name);
     //File Size
-    printf(" %8d",buf.st_size);
+    printf(" %8d", (int) buf.st_size);
     //Date and Time of modification
     t=localtime(&buf.st_mtime);
     strftime(time,sizeof(time),"%b %d %H:%M",t);
