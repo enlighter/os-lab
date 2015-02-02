@@ -245,7 +245,9 @@ int executeLsMinusLCommand(){
       AP[i]= (buf.st_mode & j ) ? P[i] : '-' ;
     printf("%s", AP);
     //No. of Hard Links
+
     printf("%5d", (int) buf.st_nlink);
+
     //User Name
     p=getpwuid(buf.st_uid);
     printf(" %.8s", p->pw_name);
@@ -253,7 +255,9 @@ int executeLsMinusLCommand(){
     g=getgrgid(buf.st_gid);
     printf(" %-8.8s", g->gr_name);
     //File Size
+
     printf(" %8d", (int) buf.st_size);
+
     //Date and Time of modification
     t=localtime(&buf.st_mtime);
     strftime(time,sizeof(time),"%b %d %H:%M",t);
@@ -266,6 +270,56 @@ int executeLsMinusLCommand(){
 }
 
 int executeCpCommand(char * arg1, char* arg2){
+  char dest[MAX_LENGTH], currPos[MAX_LENGTH] ;
+  if(getcwd(currPos, sizeof(currPos)) == NULL)
+  {
+      perror("getcwd() error");
+  }
+  strcpy(dest, currPos);
+  strcat(dest, "/");
+  strncat(dest, arg2, strlen(arg2)-1);
+
+  struct stat attr1,attr2;
+  stat(arg1, &attr1);
+  stat(dest, &attr2);
+
+  //printf("Last modified source time: %s", ctime(&attr1.st_ctime));
+  //printf("Last modified target time: %s", ctime(&attr2.st_ctime));
+
+  int timeDiff = difftime(attr2.st_ctime,attr1.st_ctime) > 0 ? 1 : -1;
+
+  FILE *source,*target;
+  char ch;
+  if( access( arg1, F_OK ) == -1 ){
+    printf("File missing !!! \n");
+  }
+  else if( access( arg1, R_OK ) == -1 ){
+    printf("Read Permission, Access Denied !!! \n");
+  }
+
+  source=fopen(arg1,"r");
+  target=fopen(dest,"w");
+  if(source == NULL)
+  {
+    printf("Unable to open source file..ERROR in opening file!!\n");
+    return -1;
+  }
+
+  if( target != NULL && access(  dest, W_OK ) == -1 ){
+    printf("Write Permission, Access Denied !!! \n");
+    return -1;
+  }
+
+  if( target != NULL && timeDiff == 1){
+    printf("Error !!! Destination has a newer file !!! \n");
+    return -1;
+  }
+
+  while((ch=fgetc(source))!=EOF)
+  fputc(ch,target);/*writing to the target file*/
+  printf("Copy Successful !!!\n");
+  fclose(source);
+  fclose(target);
 
   return 0;
 }
