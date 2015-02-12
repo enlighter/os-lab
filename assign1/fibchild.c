@@ -10,7 +10,7 @@ int main()
 	pid_t pid, wpid;						//pids of children processes
 	int n=0, status=0, i=0;					//integer variables
 	unsigned short proceed=0;				//binary flag for procession of loop
-	int *fib, *pfib, *ppfib;				//fibonacci variables: <current>, <pre>, <pre-pre>
+	unsigned long *fib, *pfib, *ppfib;				//fibonacci variables: <current>, <pre>, <pre-pre>
 	//int *fp=NULL, *pfp=NULL, *ppfp=NULL;
 
 	/*fp = &fib;
@@ -59,9 +59,9 @@ int main()
 			/*---------------*/
 
 			/* Printing current Fibonacci number */
-			printf("fib(%d) = %d\t",i,*fib);
-			printf("fib(%d) = %d\t",i-1,*pfib);
-			printf("fib(%d) = %d\n",i-2,*ppfib);
+			printf("fib(%d) = %lu\t",i,*fib);
+			printf("fib(%d) = %lu\t",i-1,*pfib);
+			printf("fib(%d) = %lu\n",i-2,*ppfib);
 			/*---------------*/
 		}
 		else if(pid>0)

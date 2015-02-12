@@ -44,7 +44,8 @@ int main()
 			//printf("i=%d, n=%d, fib=%d, pfib=%d, ppfib=%d\n",i,n,*fib,*pfib,*ppfib);
 
 			/* Calculating current Fibonacci number */
-			int j, fib, pre_fib;
+			int j=0;
+			unsigned long fib=0, pre_fib=0;
 			for(j = 1; j <= i; j++)
 			{
 				if (j<3)
@@ -54,7 +55,7 @@ int main()
 				}
 				else
 				{
-					int temp = fib;
+					unsigned long temp = fib;
 					fib = pre_fib + fib;
 					pre_fib = temp;
 				}
@@ -63,7 +64,7 @@ int main()
 
 			/* Sending current Fibonacci number through pipe*/
 
-			sprintf(buff,"%d %d",i,fib);
+			sprintf(buff,"%d %lu",i,fib);
 			write(p[1],buff,BUFSIZE);
 			/*---------------*/
 			

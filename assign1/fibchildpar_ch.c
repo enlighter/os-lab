@@ -38,7 +38,8 @@ int main()
 			//printf("i=%d, n=%d, fib=%d, pfib=%d, ppfib=%d\n",i,n,*fib,*pfib,*ppfib);
 
 			/* Calculating current Fibonacci number */
-			int j, fib, pre_fib;
+			int j=0; 
+			unsigned long fib=0, pre_fib=0;
 			for(j = 1; j <= i; j++)
 			{
 				if (j<3)
@@ -48,14 +49,14 @@ int main()
 				}
 				else
 				{
-					int temp = fib;
+					unsigned long temp = fib;
 					fib = pre_fib + fib;
 					pre_fib = temp;
 				}
 			}
 			/*---------------*/
 				
-			printf("fib(%d) = %d\n",i,fib);		// Printing current Fibonacci number
+			printf("fib(%d) = %lu\n",i,fib);		// Printing current Fibonacci number
 
 
 		}
