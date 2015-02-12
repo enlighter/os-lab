@@ -1,3 +1,3 @@
-# os-lab 2014-15
+# Operating Systems Lab 2014-15
 
 
