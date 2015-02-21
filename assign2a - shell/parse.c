@@ -28,7 +28,7 @@ void free_commQ(commQ *comm)		//freeing memory when instance no longer required
 	{
 		for(; (comm->currArg) >= 0; (comm->currArg)--)
 		{
-			printf("Freeing Q%d\n", comm->currArg);
+			//printf("Freeing Q%d\n", comm->currArg);
 			free(comm->command[comm->currArg]);
 		}
 	}
@@ -37,11 +37,13 @@ void free_commQ(commQ *comm)		//freeing memory when instance no longer required
 void insertToken(char *token, commQ *queue)			//insert elements to the commQ structure
 {
 	//char *temp = NULL;
+	//printf("is empty? %d\n", queue->isEmpty);
 
 	if(queue->isEmpty)
 	{
 		queue->isEmpty = 0;
 		queue->currArg = 0;
+		//printf("Was empty!\n");
 	}
 	else
 	{
@@ -59,12 +61,18 @@ commQ parse(char *line)
 	int i=0;
 	char *temp = NULL;
 
+	init_commQ(&ret);
+
 	temp = strtok(line, TOKENIZER);
+	//printf("temp: %s\n", temp);
 	//insertToken(temp, &ret);
 
 	for(i=1; i<=MAX_ARG_NUM && temp != NULL; i++)
 	{
+		//printf("temp: %s\n", temp);
+		//printf("is empty? %d\n", ret.isEmpty);
 		insertToken(temp, &ret);
+		//printf("commQ: no.of arguments: %d\n", ret.currArg);
 		temp = strtok(NULL, TOKENIZER);
 	}
 
@@ -79,6 +87,7 @@ int main()			//for testing purposes
 	int i=0;
 
 	init_commQ(&comm);
+	//printf("Is empty? %d\n", comm.isEmpty);
 
 	printf("Command input:\n");
 	if (!fgets(line, MAX_LENGTH, stdin))
@@ -87,7 +96,7 @@ int main()			//for testing purposes
 	}
 
 	comm = parse(line);
-	printf("commQ: no.of arguments: %d\n",comm.currArg);
+	//printf("commQ: no.of arguments: %d\n",comm.currArg);
 	i = 0;
 
 	while(!comm.isEmpty && i<=comm.currArg)
