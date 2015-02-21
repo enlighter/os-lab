@@ -6,8 +6,11 @@
 typedef struct command_queue				//struct to store parsed commands for a line in a linked-list
 {
 	/* data */
-	int curr_arg;							//no. of current arguments
+	short isEmpty;							//signifies if there is no command
+	int currArg;							//no. of current arguments
 	char *command[MAX_ARG_NUM+1];			//command[0]=command, rest are arguments for command
 
 } commQ;
 
+void init_commQ(commQ *);
+void free_commQ(commQ *);
