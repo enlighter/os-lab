@@ -23,7 +23,7 @@ commQ direction;
 int main(int argc, char *argv[]) 
 {
   char line[MAX_LENGTH], cwd[MAX_LENGTH];
-  int command=0;
+  //int command=0;
   init_commQ(&direction);
 
   /* */
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     if (!fgets(line, MAX_LENGTH, stdin)) break;
     //system(line);
-    if (processBuiltInCommand(line, &command) != NO_SUCH_BUILTIN)
+    if (processBuiltInCommand(line) != NO_SUCH_BUILTIN)
     {
       //printf("command = %d",command);
       //executeBuiltInCommand(command);
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-int processBuiltInCommand(char * cmd, int *comm)
+int processBuiltInCommand(char * cmd)
 {
   if( strncmp(cmd, "exit", strlen("exit")) == 0){
     char * arg0 = strtok (cmd," ");
