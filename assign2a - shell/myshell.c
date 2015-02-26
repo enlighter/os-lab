@@ -84,72 +84,118 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       }
 
     return executeExitCommand();  //execute exit builtin when everything checks out
-    
+
     }
-  else if( strncmp(cmd, "pwd", strlen("pwd")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    if(arg1 != NULL){
-      printArgumentError();
-      return -1;
-      }
-      return executePwdCommand();
-    }
-  else if( strncmp(cmd, "ls", strlen("ls")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    char * arg2 = strtok (NULL," ");
-    if(arg1 != NULL ){
-      if(strncmp(arg1, "-l", strlen("-l")) == 0 ){
-        return executeLsMinusLCommand();
-      }
+  else if( strncmp(direction.command[0], "pwd", strlen("pwd")) == 0){
+  /* check if main command is pwd*/
+
+    if(direction.currArg != 0){
+    /* check if there are arguments in direction */
+
       printArgumentError();
       return -1;
       }
 
-      return executeLsCommand();
+      return executePwdCommand(); //execute pwd builtin when everything checks out
+
     }
-  else if( strncmp(cmd, "cd", strlen("cd")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    char * arg2 = strtok (NULL," ");
-    if(arg2 != NULL || arg1 == NULL){
+  else if( strncmp(direction.command[0], "ls", strlen("ls")) == 0){
+  /* check if main command is ls*/
+
+    if(direction.currArg != 0 ){
+    /* check if there are arguments in direction */
+
+      if(strncmp(direction.command[1], "-l", strlen("-l")) == 0 ){
+        return executeLsMinusLCommand();    //currently the only mode supported
+      }
+
+      printArgumentError();
+      return -1;
+
+      }
+
+      return executeLsCommand();  //execute ls builtin when everything checks out
+
+    }
+  else if( strncmp(direction.command[0], "cd", strlen("cd")) == 0){
+  /* check if main command is cd*/
+
+    if(direction.currArg != 1){
+    /* check if there are proper no. of arguments in direction */
+
       printArgumentError();
       return -1;
       }
-      return executeCdCommand(arg1);
+
+      return executeCdCommand(direction.command[1]);  //execute cd builtin when everything checks out
+
     }
-  else if( strncmp(cmd, "cp", strlen("cp")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    char * arg2 = strtok (NULL," ");
-    char * arg3 = strtok (NULL," ");
-    if(arg3 != NULL){
+  else if( strncmp(direction.command[0], "cp", strlen("cp")) == 0){
+  /* check if main command is cp*/
+
+    if(direction.currArg != 2){
+    /* check if there are proper no. of arguments in direction */
+
       printArgumentError();
       return -1;
       }
-      return executeCpCommand(arg1,arg2);
+
+      return executeCpCommand(direction.command[1], direction.command[2]);  //execute cp builtin when everything checks out
+
     }
-  else if( strncmp(cmd, "mkdir", strlen("mkdir")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    char * arg2 = strtok (NULL," ");
-    if(arg2 != NULL){
+  else if( strncmp(direction.command[0], "mkdir", strlen("mkdir")) == 0){
+  /* check if main command is mkdir*/
+
+    if(direction.currArg == 0){
+    /* check if there are proper no. of arguments in direction */
+
       printArgumentError();
       return -1;
       }
-      return executeMkdirCommand(arg1);
+
+      int i=0;
+      char *temp;
+
+      for(i=1; i<=direction.currArg; i++)
+      {
+          temp = direction.command[i];
+
+          if(!executeMkdirCommand(temp))  //try to execute mkdir builtin for all arguments
+            continue;
+          else
+            return -1;    //the first instance mkdir fails, return with negative status
+      }
+
+      return 0;
+
     }
-  else if( strncmp(cmd, "rmdir", strlen("rmdir")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    char * arg2 = strtok (NULL," ");
-    if(arg2 != NULL){
+  else if( strncmp(direction.command[0], "rmdir", strlen("rmdir")) == 0){
+  /* check if main command is rmdir */
+    
+    if(direction.currArg == 0){
+    /* check if there are proper no. of arguments in direction */
+
       printArgumentError();
       return -1;
       }
-      return executeRmdirCommand(arg1);
+
+      int i=0;
+      char *temp;
+
+      for(i=1; i<=direction.currArg; i++)
+      {
+          temp = direction.command[i];
+
+          if(!executeRmdirCommand(temp))  //try to execute rmdir builtin for all arguments
+            continue;
+          else
+            return -1;    //the first instance rmdir fails, return with negative status
+      }
+
+      return 0;
+
     }
+
   else
     return NO_SUCH_BUILTIN;
 
