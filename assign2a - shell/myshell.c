@@ -1,4 +1,4 @@
-/*######### PLEASE INCLUDE THE FILE "myshell.h" IN THE SAME FOLDER #########*/
+/*######### PLEASE INCLUDE THE FILE "myshell.h, parse.c & parse.h" IN THE SAME FOLDER #########*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,19 +17,24 @@
 #include <dirent.h>
 #include "myshell.h"
 #include "parse.c"
+/*--------NECESSARY HEADERS INCLUDED---------*/
 
-commQ direction;
+commQ direction;      //global structure instance for storing parsed command
 
 int main(int argc, char *argv[]) 
 {
   char line[MAX_LENGTH], cwd[MAX_LENGTH];
-  //int command=0;
-  init_commQ(&direction);
+  /* to store command line and to store current directory full path */
 
-  /* */
+  //int command=0;
+  init_commQ(&direction);    //intialize structure
+
+  /* Print the command prompt */
   system("clear");
   printf("New custom shell (pid: %d) created:\n\n",getpid());
+  /*----------------------------*/
 
+  /* Enter perpetual loop for main process of shell */
   while (1) 
   {
 
@@ -53,21 +58,33 @@ int main(int argc, char *argv[])
       system(line);
     }
   }
+  /*----------------------------*/
 
   free_commQ(&direction);
   return 0;
 }
 
-int processBuiltInCommand(char * cmd)
+int processBuiltInCommand(char * cmd)   //check for and process builtin commands
 {
-  if( strncmp(cmd, "exit", strlen("exit")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    if(arg1 != NULL){
+
+  //printf("command : %s", cmd);
+  direction = parse(cmd);        //parsing the command line to get direction
+
+  //printf("direction.currArg = %d\n", direction.currArg);
+
+
+  if( strncmp(direction.command[0], "exit", strlen("exit")) == 0){
+  /* check if main command is exit*/
+
+    if(direction.currArg != 0){
+    /* check if there are arguments in direction */
+
       printArgumentError();
       return -1;
       }
-    return executeExitCommand();
+
+    return executeExitCommand();  //execute exit builtin when everything checks out
+    
     }
   else if( strncmp(cmd, "pwd", strlen("pwd")) == 0){
     char * arg0 = strtok (cmd," ");

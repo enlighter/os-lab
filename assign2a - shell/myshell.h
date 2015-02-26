@@ -8,7 +8,7 @@
 #define EXIT        -1
 #define NO_SUCH_BUILTIN -2
 
-int processBuiltInCommand(char *);
+int processBuiltInCommand(char *);	//check for and process builtin commands
 int processOtherCommands(char *);
 //void executeBuiltInCommand(int);
 int executeCdCommand(char *);
