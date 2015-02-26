@@ -16,12 +16,15 @@
 #include <time.h>
 #include <dirent.h>
 #include "myshell.h"
+#include "parse.c"
 
+commQ direction;
 
 int main(int argc, char *argv[]) 
 {
   char line[MAX_LENGTH], cwd[MAX_LENGTH];
   int command=0;
+  init_commQ(&direction);
 
   /* */
   system("clear");
@@ -51,6 +54,7 @@ int main(int argc, char *argv[])
     }
   }
 
+  free_commQ(&direction);
   return 0;
 }
 
