@@ -105,7 +105,7 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
     if(direction.currArg != 0 ){
     /* check if there are arguments in direction */
 
-      if(strncmp(direction.command[1], "-l", strlen("-l")) == 0 ){
+      if(strncmp(direction.command[1], "-l", strlen("-l")) == 0 && direction.currArg == 1){
         return executeLsMinusLCommand();    //currently the only mode supported
       }
 
@@ -239,15 +239,15 @@ int executePwdCommand(){
 int executeMkdirCommand(char * arg){
 
   int ret=0;
-  char name[20];
+  //char name[20];
   mode_t process_mask = umask(0);
 
-  strncpy(name, arg, strlen(arg)-1);
-  ret = mkdir(name, S_IRWXU | S_IRWXG | S_IRWXO);
+  //strncpy(name, arg, strlen(arg));
+  ret = mkdir(arg, S_IRWXU | S_IRWXG | S_IRWXO);
 
   if(!ret)
   {
-    printf("Directory %s created\n",name);
+    printf("Directory %s created\n",arg);
   }
   else
   {
@@ -261,14 +261,14 @@ int executeMkdirCommand(char * arg){
 int executeRmdirCommand(char * arg){
 
   int ret=0;
-  char name[20];
+  //char name[20];
 
-  strncpy(name, arg, strlen(arg)-1);
-  ret = rmdir(name);
+  //strncpy(name, arg, strlen(arg));
+  ret = rmdir(arg);
 
   if(!ret)
   {
-    printf("Directory %s deleted\n",name);
+    printf("Directory %s deleted\n",arg);
   }
   else
   {
