@@ -134,6 +134,8 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return FAULT;
       }
 
+      //print_commQ(&direction);      //for debugging
+
       return executeCdCommand(direction.command[1]);  //execute cd builtin when everything checks out
 
     }
@@ -220,7 +222,7 @@ int executeCdCommand(char *arg)
   }
   strcpy(destination, currPos);
   strcat(destination, "/");
-  strncat(destination, arg, strlen(arg)-1);
+  strcat(destination, arg);
   status = chdir(destination);
   
   if(status!=0)
