@@ -20,4 +20,4 @@ int executeLsCommand();
 int executeLsMinusLCommand();
 int executeCpCommand(char *, char*);
 int executeExitCommand();
-void printArgumentError();
+inline void printArgumentError();

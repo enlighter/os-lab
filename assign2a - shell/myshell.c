@@ -427,6 +427,6 @@ int executeExitCommand(){
   return FAULT;
 }
 
-void printArgumentError(){
+inline void printArgumentError(){
   printf("Argument Mismatch\n");
 }
