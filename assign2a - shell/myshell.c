@@ -365,14 +365,17 @@ int executeLsMinusLCommand(){
 }
 
 int executeCpCommand(char * arg1, char* arg2){
+
   char dest[MAX_LENGTH], currPos[MAX_LENGTH] ;
+
   if(getcwd(currPos, sizeof(currPos)) == NULL)
   {
       perror("getcwd() error");
   }
+
   strcpy(dest, currPos);
   strcat(dest, "/");
-  strncat(dest, arg2, strlen(arg2)-1);
+  strcat(dest, arg2);
 
   struct stat attr1,attr2;
   stat(arg1, &attr1);
