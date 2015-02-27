@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 {
   char line[MAX_LENGTH], cwd[MAX_LENGTH];
   /* to store command line and to store current directory full path */
+  char tempParsee[MAX_LENGTH];  //temporary sring to store the string to be parsed
 
   //int command=0;
   init_commQ(&direction);    //intialize structure
@@ -47,9 +48,12 @@ int main(int argc, char *argv[])
 
     if (!fgets(line, MAX_LENGTH, stdin)) break;
     //system(line);
-    if (processBuiltInCommand(line) != NO_SUCH_BUILTIN)
+
+    strcpy(tempParsee, line); //copy line to temp string to be parsed
+
+    if (processBuiltInCommand(tempParsee) != NO_SUCH_BUILTIN)
     {
-      //printf("command = %d",command);
+      printf("command = %s",line);
       //executeBuiltInCommand(command);
     }
     else
@@ -70,10 +74,11 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
   //printf("command : %s", cmd);
   direction = parse(cmd);        //parsing the command line to get direction
 
+  print_commQ(&direction);      //for debugging
   //printf("direction.currArg = %d\n", direction.currArg);
 
 
-  if( strncmp(direction.command[0], "exit", strlen("exit")) == 0){
+  if( strcmp(direction.command[0], "exit") == 0){
   /* check if main command is exit*/
 
     if(direction.currArg != 0){
@@ -86,7 +91,7 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
     return executeExitCommand();  //execute exit builtin when everything checks out
 
     }
-  else if( strncmp(direction.command[0], "pwd", strlen("pwd")) == 0){
+  else if( strcmp(direction.command[0], "pwd") == 0){
   /* check if main command is pwd*/
 
     if(direction.currArg != 0){
@@ -99,13 +104,13 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return executePwdCommand(); //execute pwd builtin when everything checks out
 
     }
-  else if( strncmp(direction.command[0], "ls", strlen("ls")) == 0){
+  else if( strcmp(direction.command[0], "ls") == 0){
   /* check if main command is ls*/
 
     if(direction.currArg != 0 ){
     /* check if there are arguments in direction */
 
-      if(strncmp(direction.command[1], "-l", strlen("-l")) == 0 && direction.currArg == 1){
+      if(strcmp(direction.command[1], "-l") == 0 && direction.currArg == 1){
         return executeLsMinusLCommand();    //currently the only mode supported
       }
 
@@ -117,7 +122,7 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return executeLsCommand();  //execute ls builtin when everything checks out
 
     }
-  else if( strncmp(direction.command[0], "cd", strlen("cd")) == 0){
+  else if( strcmp(direction.command[0], "cd") == 0){
   /* check if main command is cd*/
 
     if(direction.currArg != 1){
@@ -130,7 +135,7 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return executeCdCommand(direction.command[1]);  //execute cd builtin when everything checks out
 
     }
-  else if( strncmp(direction.command[0], "cp", strlen("cp")) == 0){
+  else if( strcmp(direction.command[0], "cp") == 0){
   /* check if main command is cp*/
 
     if(direction.currArg != 2){
@@ -143,7 +148,7 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return executeCpCommand(direction.command[1], direction.command[2]);  //execute cp builtin when everything checks out
 
     }
-  else if( strncmp(direction.command[0], "mkdir", strlen("mkdir")) == 0){
+  else if( strcmp(direction.command[0], "mkdir") == 0){
   /* check if main command is mkdir*/
 
     if(direction.currArg == 0){
@@ -169,7 +174,7 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return 0;
 
     }
-  else if( strncmp(direction.command[0], "rmdir", strlen("rmdir")) == 0){
+  else if( strcmp(direction.command[0], "rmdir") == 0){
   /* check if main command is rmdir */
     
     if(direction.currArg == 0){

@@ -16,5 +16,6 @@ typedef struct command_queue		//struct to store parsed commands for a line in a 
 
 void init_commQ(commQ *);			//initialize a commQ instance
 void free_commQ(commQ *);			//free dynamic memory from commQ instance that is no longer required
+void print_commQ(commQ *);			//for debugging purposes
 void insertToken(char *, commQ *);	//insert elements to the commQ structure
 commQ parse(char *);				//to parse and store from the command line
