@@ -5,7 +5,8 @@
 #define RMDIR       4
 #define LS          5
 #define CP          6
-#define EXIT        -1
+#define FAULT       -1
+#define SUCCESS		0
 #define NO_SUCH_BUILTIN -2
 
 int processBuiltInCommand(char *);	//check for and process builtin commands

@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
     if (processBuiltInCommand(tempParsee) != NO_SUCH_BUILTIN)
     {
-      printf("command = %s",line);
+      //printf("command = %s",line);
       //executeBuiltInCommand(command);
     }
     else
@@ -74,9 +74,11 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
   //printf("command : %s", cmd);
   direction = parse(cmd);        //parsing the command line to get direction
 
-  print_commQ(&direction);      //for debugging
+  //print_commQ(&direction);      //for debugging
   //printf("direction.currArg = %d\n", direction.currArg);
 
+  if(direction.isEmpty)
+    return FAULT;
 
   if( strcmp(direction.command[0], "exit") == 0){
   /* check if main command is exit*/
