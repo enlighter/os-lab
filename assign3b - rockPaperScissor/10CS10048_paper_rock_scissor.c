@@ -2,14 +2,23 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>	/* Include this file to use pipes */
+#include <time.h>	/* randomize using time */
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <signal.h>	/* signaling between processes */
+
 
 #define	SUCCESS	0
 #define FAULT	-1
 #define BUFSIZE 80	//write lines of 80 chars into the pipe.
+#define PAPER 	1
+#define SCISSOR 2
+#define ROCK 	3
+
 
 int participant();	//to be executed by a child for participating in the game
 int mediator();		//to be used by master(host) to mediate the game 
-inline void printChildReturn(int *, int *, int *, int *); //to signal child end
+inline void printChildReturn(int, int, int, int); //to signal child end
 
 int master()		//host of the game
 {
@@ -102,10 +111,10 @@ int mediator()
 
 }
 
-inline void printChildReturn(int *wid, int *stat, int *idC, int *idD)
+inline void printChildReturn(int wid, int stat, int idC, int idD)
 {
-	if(*wid == *idC)
-		printf("C ended with status %d\n", *stat);
-	else if(*wid == *idD)
-		printf("D ended with status %d\n", *stat);
+	if(wid == idC)
+		printf("C ended with status %d\n", stat);
+	else if(wid == idD)
+		printf("D ended with status %d\n", stat);
 }
