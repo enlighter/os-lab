@@ -22,7 +22,7 @@ int cPoints = 0, dPoints = 0;	//game points for the two participants
 
 
 int participant();	//to be executed by a child for participating in the game
-int mediator();		//to be used by master(host) to mediate the game 
+int mediate();		//to be used by master(host) to mediate the game 
 inline void printChildReturn(int, int, int, int); //to signal child end
 void childSigHandler (int);		// The signal handler for the child processes
 
@@ -33,6 +33,7 @@ int master()		//host of the game
 	int wpid = 0, status = -100;	//pid of a child ended
 	int ret = SUCCESS;				//return value
 	int handC = 0, handD = 0;		//hands of the participants in one turn
+	int mediator = -100;			//determines the game status
 
 	pipe(fdc);
 	pipe(fdd);
@@ -78,6 +79,7 @@ int master()		//host of the game
 
 			signal(SIGTSTP, childSigHandler);           /* Register SIGTSTP handler */
       		signal(SIGCONT, childSigHandler);           /* Register SIGCONT handler */
+      		signal(SIGUSR1, childSigHandler);           /* Register SIGUSR1 handler */
 
       		while (1) sleep(1);     /* Sleep until a signal is received from master */
 		}
@@ -87,6 +89,7 @@ int master()		//host of the game
 
 			signal(SIGTSTP, childSigHandler);           /* Register SIGTSTP handler */
       		signal(SIGCONT, childSigHandler);           /* Register SIGCONT handler */
+      		signal(SIGUSR1, childSigHandler);           /* Register SIGUSR1 handler */
 
       		while (1) sleep(1);     /* Sleep until a signal is received from master */
 		}
@@ -127,10 +130,19 @@ int master()		//host of the game
 					          */
 				printf("Master reads: %d\n",handD);
 
-				kill(pidD, SIGTSTP);	//send stop signal to C				
+				kill(pidD, SIGTSTP);	//send stop signal to C	
+				/*----------*/
+
+				mediator = mediate(handC, handD);
+
+				if(mediator == SUCCESS)
+					break;
 
 				printf("------ End of turn ------\n");
 			}
+
+			kill(pidC, SIGUSR1);		//sending user defined termination signal
+			kill(pidD, SIGUSR1);		//sending user defined termination signal
 
 			wpid = wait(&status);
 			printChildReturn(&wpid, &status, &pidC, &pidD);
@@ -160,7 +172,7 @@ int participant()
 
 }
 
-int mediator()
+int mediate(int hand1, int hand2)
 {
 
 }
@@ -171,9 +183,14 @@ void childSigHandler ( int sig )
       printf("+++ Child [%d] : Received signal SIGTSTP from master...\n", getpid());
       //sleep(1);
    } else if (sig == SIGCONT) {
-      printf("+++ Child [%d] : Received signal SIGCONT from parent...\n");
+      printf("+++ Child [%d] : Received signal SIGCONT from parent...\n", getpid());
       //sleep(5);
       participant();
+   }
+   else if( sig == SIGUSR1 )
+   {
+   		printf("+++ Child [%d] : Received signal SIGUSR1 from parent... exiting...\n", getpid());
+   		exit(0);
    }
    //exit(0);
 }
