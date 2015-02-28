@@ -14,19 +14,25 @@
 #define PAPER 	1
 #define SCISSOR 2
 #define ROCK 	3
+#define	MAXPOINT 10 //the maximum point at which to win
+
+int fdc[2], fdd[2];		//pipes for communicating with child c & d respectively
+char line[BUFSIZE];
+int cPoints = 0, dPoints = 0;	//game points for the two participants
 
 
 int participant();	//to be executed by a child for participating in the game
 int mediator();		//to be used by master(host) to mediate the game 
 inline void printChildReturn(int, int, int, int); //to signal child end
+void childSigHandler (int);		// The signal handler for the child processes
 
 int master()		//host of the game
 {
-	int fdc[2], fdd[2];		//pipes for communicating with child c & d respectively
-	char line[BUFSIZE];
+	
 	int pidC = FAULT, pidD = FAULT;	//process ids of children C & D respectively
 	int wpid = 0, status = -100;	//pid of a child ended
 	int ret = SUCCESS;				//return value
+	int handC = 0, handD = 0;		//hands of the participants in one turn
 
 	pipe(fdc);
 	pipe(fdd);
@@ -69,14 +75,62 @@ int master()		//host of the game
 		if(!pidC)		//C executing
 		{
 			printf("C playing game: %d\n", getpid());
+
+			signal(SIGTSTP, childSigHandler);           /* Register SIGTSTP handler */
+      		signal(SIGCONT, childSigHandler);           /* Register SIGCONT handler */
+
+      		while (1) sleep(1);     /* Sleep until a signal is received from master */
 		}
 		else if(!pidD)	//D executing
 		{
 			printf("D playing game: %d\n", getpid());
+
+			signal(SIGTSTP, childSigHandler);           /* Register SIGTSTP handler */
+      		signal(SIGCONT, childSigHandler);           /* Register SIGCONT handler */
+
+      		while (1) sleep(1);     /* Sleep until a signal is received from master */
 		}
 		else			//P (master) executing
 		{
+			//printf("+++ Parent: Going to send signal SIGUSR%d to child\n", t);
+      		kill(pidC, SIGTSTP);        /* Send stop signal to C */
+      		kill(pidD, SIGTSTP);        /* Send stop signal to D */
+
 			printf("Master hosting the game: %d\n", getpid());
+
+			while(1)	//executing rounds
+			{
+				printf("------ Start of turn ------\n");
+
+				/* Dealing with C */
+				kill(pidC, SIGCONT);	//send ready signal to C
+
+				printf("Master trying to read pipe from C\n");
+				read(fdc[0], line, BUFSIZE);
+				sscanf(line,"%d",&handC); /* Read the integer from the
+						       line of characters read
+						       from the pipe
+					          */
+				printf("Master reads: %d\n",handC);
+
+				kill(pidC, SIGTSTP);	//send stop signal to C
+				/*----------*/
+
+				/* Dealing with D */
+				kill(pidD, SIGCONT);	//send ready signal to D
+
+				printf("Master trying to read pipe from D\n");
+				read(fdd[0], line, BUFSIZE);
+				sscanf(line,"%d",&handD); /* Read the integer from the
+						       line of characters read
+						       from the pipe
+					          */
+				printf("Master reads: %d\n",handD);
+
+				kill(pidD, SIGTSTP);	//send stop signal to C				
+
+				printf("------ End of turn ------\n");
+			}
 
 			wpid = wait(&status);
 			printChildReturn(&wpid, &status, &pidC, &pidD);
@@ -109,6 +163,19 @@ int participant()
 int mediator()
 {
 
+}
+
+void childSigHandler ( int sig )
+{
+   if (sig == SIGTSTP) {
+      printf("+++ Child [%d] : Received signal SIGTSTP from master...\n", getpid());
+      //sleep(1);
+   } else if (sig == SIGCONT) {
+      printf("+++ Child [%d] : Received signal SIGCONT from parent...\n");
+      //sleep(5);
+      participant();
+   }
+   //exit(0);
 }
 
 inline void printChildReturn(int wid, int stat, int idC, int idD)
