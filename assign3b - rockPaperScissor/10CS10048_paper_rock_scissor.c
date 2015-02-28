@@ -9,12 +9,15 @@
 
 int participant();	//to be executed by a child for participating in the game
 int mediator();		//to be used by master(host) to mediate the game 
+inline void printChildReturn(int *, int *, int *, int *); //to signal child end
 
 int master()		//host of the game
 {
 	int fdc[2], fdd[2];		//pipes for communicating with child c & d respectively
 	char line[BUFSIZE];
-	int pidC=FAULT, pidD=FAULT;		//process ids of children C & D respectively
+	int pidC = FAULT, pidD = FAULT;	//process ids of children C & D respectively
+	int wpid = 0, status = -100;	//pid of a child ended
+	int ret = SUCCESS;				//return value
 
 	pipe(fdc);
 	pipe(fdd);
@@ -65,6 +68,19 @@ int master()		//host of the game
 		else			//P (master) executing
 		{
 			printf("Master hosting the game: %d\n", getpid());
+
+			wpid = wait(&status);
+			printChildReturn(&wpid, &status, &pidC, &pidD);
+			if(status != 0)
+				ret = FAULT;
+
+			wpid = wait(&status);
+			printChildReturn(&wpid, &status, &pidC, &pidD);
+			if(status != 0)
+				ret = FAULT;
+
+			return ret;			
+
 		}
 	}
 }
@@ -84,4 +100,12 @@ int participant()
 int mediator()
 {
 
+}
+
+inline void printChildReturn(int *wid, int *stat, int *idC, int *idD)
+{
+	if(*wid == *idC)
+		printf("C ended with status %d\n", *stat);
+	else if(*wid == *idD)
+		printf("D ended with status %d\n", *stat);
 }
