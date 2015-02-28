@@ -18,13 +18,17 @@
 
 int fdc[2], fdd[2];		//pipes for communicating with child c & d respectively
 char line[BUFSIZE];
-int cPoints = 0, dPoints = 0;	//game points for the two participants
+float cPoints = 0, dPoints = 0;	//game points for the two participants
 
 
 int participant();	//to be executed by a child for participating in the game
 int mediate();		//to be used by master(host) to mediate the game 
 inline void printChildReturn(int, int, int, int); //to signal child end
 void childSigHandler (int);		// The signal handler for the child processes
+inline printWinner(char W)
+{
+	printf("Master : %c wins the game", W);
+}
 
 int master()		//host of the game
 {
@@ -95,7 +99,7 @@ int master()		//host of the game
 		}
 		else			//P (master) executing
 		{
-			//printf("+++ Parent: Going to send signal SIGUSR%d to child\n", t);
+			
       		kill(pidC, SIGTSTP);        /* Send stop signal to C */
       		kill(pidD, SIGTSTP);        /* Send stop signal to D */
 
@@ -145,12 +149,12 @@ int master()		//host of the game
 			kill(pidD, SIGUSR1);		//sending user defined termination signal
 
 			wpid = wait(&status);
-			printChildReturn(&wpid, &status, &pidC, &pidD);
+			printChildReturn(wpid, status, pidC, pidD);
 			if(status != 0)
 				ret = FAULT;
 
 			wpid = wait(&status);
-			printChildReturn(&wpid, &status, &pidC, &pidD);
+			printChildReturn(wpid, status, pidC, pidD);
 			if(status != 0)
 				ret = FAULT;
 
@@ -174,7 +178,57 @@ int participant()
 
 int mediate(int hand1, int hand2)
 {
+	int t1 = 0, t2 = 0;
 
+	if(hand1 == ROCK)
+	{
+		if(hand2 == SCISSOR)
+			cPoints = cPoints + 1.0;
+		else if(hand2 == PAPER)
+			dPoints = dPoints + 1.0;
+	}
+	else if(hand1 == SCISSOR && hand2 == PAPER)
+		cPoints = cPoints + 1.0;
+	else if(hand1 == hand2)
+	{
+		cPoints = cPoints + 0.5;
+		cPoints = cPoints + 0.5;
+	}
+
+	printf("Master [%d] - current points:\nC = %f\tD = %f\n", getpid(), cPoints, dPoints);
+
+	if(cPoints > 10.0 || dPoints > 10.0)
+	{
+		if(cPoints == dPoints)
+		{
+			srand((unsigned int)time(NULL));
+      		t1 = rand();
+      		t2 = rand();
+
+      		if(t1 > t2)	//c wins the game
+      		{
+      			printWinner('C');
+      			return SUCCESS;
+      		}
+      		else		//d wins the game
+      		{
+      			printWinner('D');
+      			return SUCCESS;
+      		}
+		}
+		else if(cPoints > dPoints)	//c wins the game
+		{
+			printWinner('C');
+			return SUCCESS;
+		}
+		else			//d wins the game
+		{
+			printWinner('D');
+			return SUCCESS;
+		}
+	}
+
+	return FAULT;
 }
 
 void childSigHandler ( int sig )
