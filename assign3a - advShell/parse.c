@@ -67,6 +67,9 @@ commQ parse(char *line)
 	//printf("temp: %s\n", temp);
 	//insertToken(temp, &ret);
 
+	if(temp == NULL)		//if there are no tokens at all
+		return ret;
+
 	for(i=1; i<=MAX_ARG_NUM && temp != NULL; i++)
 	{
 		//printf("temp: %s\n", temp);
@@ -77,6 +80,24 @@ commQ parse(char *line)
 	}
 
 	return ret;
+}
+
+void print_commQ(commQ *read)			//for debugging purposes
+{
+	if(read->isEmpty)
+	{
+		printf("Read structure empty!\n");
+		return;
+	}
+	
+	int i=0;
+
+	printf("The current parsed struct: \n");
+	for(i=0; i<= read->currArg; i++)
+	{
+		printf("%s", read->command[i]);
+	}
+	printf("\n");
 }
 
 /*
@@ -95,8 +116,10 @@ int main()			//for testing purposes
 		printf("read error!\n");
 	}
 
+	printf("line : %s ",line);
+
 	comm = parse(line);
-	//printf("commQ: no.of arguments: %d\n",comm.currArg);
+	printf("arguments : %d ", comm.currArg);
 	i = 0;
 
 	while(!comm.isEmpty && i<=comm.currArg)

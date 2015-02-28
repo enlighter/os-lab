@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 {
   char line[MAX_LENGTH], cwd[MAX_LENGTH];
   /* to store command line and to store current directory full path */
+  char tempParsee[MAX_LENGTH];  //temporary sring to store the string to be parsed
 
   //int command=0;
   init_commQ(&direction);    //intialize structure
@@ -47,9 +48,12 @@ int main(int argc, char *argv[])
 
     if (!fgets(line, MAX_LENGTH, stdin)) break;
     //system(line);
-    if (processBuiltInCommand(line) != NO_SUCH_BUILTIN)
+
+    strcpy(tempParsee, line); //copy line to temp string to be parsed
+
+    if (processBuiltInCommand(tempParsee) != NO_SUCH_BUILTIN)
     {
-      //printf("command = %d",command);
+      //printf("command = %s",line);
       //executeBuiltInCommand(command);
     }
     else
@@ -61,91 +65,150 @@ int main(int argc, char *argv[])
   /*----------------------------*/
 
   free_commQ(&direction);
-  return 0;
+  return SUCCESS;
 }
 
-int processBuiltInCommand(char * cmd)
+int processBuiltInCommand(char * cmd)   //check for and process builtin commands
 {
 
-  insertToken(cmd, &direction);
+  //printf("command : %s", cmd);
+  direction = parse(cmd);        //parsing the command line to get direction
 
+  //print_commQ(&direction);      //for debugging
+  //printf("direction.currArg = %d\n", direction.currArg);
 
-  if( strncmp(direction.command[0], "exit", strlen("exit")) == 0){
-  
+  if(direction.isEmpty)
+    return FAULT;
+
+  if( strcmp(direction.command[0], "exit") == 0){
+  /* check if main command is exit*/
+
     if(direction.currArg != 0){
+    /* check if there are arguments in direction */
+
       printArgumentError();
-      return -1;
-      }
-    return executeExitCommand();
-    }
-  else if( strncmp(cmd, "pwd", strlen("pwd")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    if(arg1 != NULL){
-      printArgumentError();
-      return -1;
-      }
-      return executePwdCommand();
-    }
-  else if( strncmp(cmd, "ls", strlen("ls")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    char * arg2 = strtok (NULL," ");
-    if(arg1 != NULL ){
-      if(strncmp(arg1, "-l", strlen("-l")) == 0 ){
-        return executeLsMinusLCommand();
-      }
-      printArgumentError();
-      return -1;
+      return FAULT;
       }
 
-      return executeLsCommand();
+    return executeExitCommand();  //execute exit builtin when everything checks out
+
     }
-  else if( strncmp(cmd, "cd", strlen("cd")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    char * arg2 = strtok (NULL," ");
-    if(arg2 != NULL || arg1 == NULL){
+  else if( strcmp(direction.command[0], "pwd") == 0){
+  /* check if main command is pwd*/
+
+    if(direction.currArg != 0){
+    /* check if there are arguments in direction */
+
       printArgumentError();
-      return -1;
+      return FAULT;
       }
-      return executeCdCommand(arg1);
+
+      return executePwdCommand(); //execute pwd builtin when everything checks out
+
     }
-  else if( strncmp(cmd, "cp", strlen("cp")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    char * arg2 = strtok (NULL," ");
-    char * arg3 = strtok (NULL," ");
-    if(arg3 != NULL){
+  else if( strcmp(direction.command[0], "ls") == 0){
+  /* check if main command is ls*/
+
+    if(direction.currArg != 0 ){
+    /* check if there are arguments in direction */
+
+      if(strcmp(direction.command[1], "-l") == 0 && direction.currArg == 1){
+        return executeLsMinusLCommand();    //currently the only mode supported
+      }
+
       printArgumentError();
-      return -1;
+      return FAULT;
+
       }
-      return executeCpCommand(arg1,arg2);
+
+      return executeLsCommand();  //execute ls builtin when everything checks out
+
     }
-  else if( strncmp(cmd, "mkdir", strlen("mkdir")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    char * arg2 = strtok (NULL," ");
-    if(arg2 != NULL){
+  else if( strcmp(direction.command[0], "cd") == 0){
+  /* check if main command is cd*/
+
+    if(direction.currArg != 1){
+    /* check if there are proper no. of arguments in direction */
+
       printArgumentError();
-      return -1;
+      return FAULT;
       }
-      return executeMkdirCommand(arg1);
+
+      //print_commQ(&direction);      //for debugging
+
+      return executeCdCommand(direction.command[1]);  //execute cd builtin when everything checks out
+
     }
-  else if( strncmp(cmd, "rmdir", strlen("rmdir")) == 0){
-    char * arg0 = strtok (cmd," ");
-    char * arg1 = strtok (NULL," ");
-    char * arg2 = strtok (NULL," ");
-    if(arg2 != NULL){
+  else if( strcmp(direction.command[0], "cp") == 0){
+  /* check if main command is cp*/
+
+    if(direction.currArg != 2){
+    /* check if there are proper no. of arguments in direction */
+
       printArgumentError();
-      return -1;
+      return FAULT;
       }
-      return executeRmdirCommand(arg1);
+
+      return executeCpCommand(direction.command[1], direction.command[2]);  //execute cp builtin when everything checks out
+
     }
+  else if( strcmp(direction.command[0], "mkdir") == 0){
+  /* check if main command is mkdir*/
+
+    if(direction.currArg == 0){
+    /* check if there are proper no. of arguments in direction */
+
+      printArgumentError();
+      return FAULT;
+      }
+
+      int i=0;
+      char *temp;
+
+      for(i=1; i<=direction.currArg; i++)
+      {
+          temp = direction.command[i];
+
+          if(!executeMkdirCommand(temp))  //try to execute mkdir builtin for all arguments
+            continue;
+          else
+            return FAULT;    //the first instance mkdir fails, return with negative status
+      }
+
+      return SUCCESS;
+
+    }
+  else if( strcmp(direction.command[0], "rmdir") == 0){
+  /* check if main command is rmdir */
+    
+    if(direction.currArg == 0){
+    /* check if there are proper no. of arguments in direction */
+
+      printArgumentError();
+      return FAULT;
+      }
+
+      int i=0;
+      char *temp;
+
+      for(i=1; i<=direction.currArg; i++)
+      {
+          temp = direction.command[i];
+
+          if(!executeRmdirCommand(temp))  //try to execute rmdir builtin for all arguments
+            continue;
+          else
+            return FAULT;    //the first instance rmdir fails, return with negative status
+      }
+
+      return SUCCESS;
+
+    }
+
   else
     return NO_SUCH_BUILTIN;
 
-  return 0;
+  return SUCCESS;
 }
 
 int executeCdCommand(char *arg)
@@ -159,16 +222,16 @@ int executeCdCommand(char *arg)
   }
   strcpy(destination, currPos);
   strcat(destination, "/");
-  strncat(destination, arg, strlen(arg)-1);
+  strcat(destination, arg);
   status = chdir(destination);
   
   if(status!=0)
   {
     perror("Error");
-    return -1;
+    return FAULT;
   }
   else
-    return 0;
+    return SUCCESS;
 }
 
 int executePwdCommand(){
@@ -177,23 +240,23 @@ int executePwdCommand(){
       printf("Current Working Directory : %s\n", cwd);
     else{
       perror("getcwd() error");
-      return -1;
+      return FAULT;
     }
-  return 0;
+  return SUCCESS;
 }
 
 int executeMkdirCommand(char * arg){
 
   int ret=0;
-  char name[20];
+  //char name[20];
   mode_t process_mask = umask(0);
 
-  strncpy(name, arg, strlen(arg)-1);
-  ret = mkdir(name, S_IRWXU | S_IRWXG | S_IRWXO);
+  //strncpy(name, arg, strlen(arg));
+  ret = mkdir(arg, S_IRWXU | S_IRWXG | S_IRWXO);
 
   if(!ret)
   {
-    printf("Directory %s created\n",name);
+    printf("Directory %s created\n",arg);
   }
   else
   {
@@ -207,14 +270,14 @@ int executeMkdirCommand(char * arg){
 int executeRmdirCommand(char * arg){
 
   int ret=0;
-  char name[20];
+  //char name[20];
 
-  strncpy(name, arg, strlen(arg)-1);
-  ret = rmdir(name);
+  //strncpy(name, arg, strlen(arg));
+  ret = rmdir(arg);
 
   if(!ret)
   {
-    printf("Directory %s deleted\n",name);
+    printf("Directory %s deleted\n",arg);
   }
   else
   {
@@ -236,7 +299,7 @@ int executeLsCommand(){
   }
   printf("\n");
   closedir(dp);
-  return 0;
+  return SUCCESS;
 }
 
 int executeLsMinusLCommand(){
@@ -298,18 +361,21 @@ int executeLsMinusLCommand(){
     printf(" %s\n",sd->d_name);
   }
   closedir(dp);
-  return 0;
+  return SUCCESS;
 }
 
 int executeCpCommand(char * arg1, char* arg2){
+
   char dest[MAX_LENGTH], currPos[MAX_LENGTH] ;
+
   if(getcwd(currPos, sizeof(currPos)) == NULL)
   {
       perror("getcwd() error");
   }
+
   strcpy(dest, currPos);
   strcat(dest, "/");
-  strncat(dest, arg2, strlen(arg2)-1);
+  strcat(dest, arg2);
 
   struct stat attr1,attr2;
   stat(arg1, &attr1);
@@ -334,17 +400,17 @@ int executeCpCommand(char * arg1, char* arg2){
   if(source == NULL)
   {
     printf("Unable to open source file..ERROR in opening file!!\n");
-    return -1;
+    return FAULT;
   }
 
   if( target != NULL && access(  dest, W_OK ) == -1 ){
     printf("Write Permission, Access Denied !!! \n");
-    return -1;
+    return FAULT;
   }
 
   if( target != NULL && timeDiff == 1){
     printf("Error !!! Destination has a newer file !!! \n");
-    return -1;
+    return FAULT;
   }
 
   while((ch=fgetc(source))!=EOF)
@@ -353,14 +419,14 @@ int executeCpCommand(char * arg1, char* arg2){
   fclose(source);
   fclose(target);
 
-  return 0;
+  return SUCCESS;
 }
 
 int executeExitCommand(){
   exit(0);
-  return -1;
+  return FAULT;
 }
 
-void printArgumentError(){
+inline void printArgumentError(){
   printf("Argument Mismatch\n");
 }
