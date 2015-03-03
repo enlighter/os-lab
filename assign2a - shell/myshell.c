@@ -58,8 +58,20 @@ int main(int argc, char *argv[])
     }
     else
     {
-      printf("PATH: %s\n", getenv("PATH"));
-      system(line);
+      //printf("PATH: %s\n", getenv("PATH"));
+      //system(line);
+      //int wait = 1;
+      direction = parse(line); 
+      if(direction.isEmpty){
+        printf("Direction is empty\n");
+        return FAULT;
+      }
+
+      //if( direction.currArg > 0 && strcmp(direction.command[1], "&") == 0){
+        //wait = 0;
+      //}
+      //printf("wait : %d[%d] \n",direction.wait,direction.currArg);
+      executeExecutable(direction.command,direction.wait);
     }
   }
   /*----------------------------*/
@@ -68,6 +80,27 @@ int main(int argc, char *argv[])
   return SUCCESS;
 }
 
+void  executeExecutable(char **argv, int wait)
+{
+     pid_t  pid;
+     int    status;
+
+     if ((pid = fork()) < 0) {     // child process           
+          printf("ERROR: forking child process failed\n");
+     }
+     else if (pid == 0) {          // child process:       
+          if (execvp(*argv, argv) < 0) {     // execute the command 
+               printf("ERROR: command exec failed\n");
+          }
+     }
+     else {                                   // for the parent:     
+          //while (wait(&status) != pid);     // wait for completion  
+      //printf("wait : %d\n", wait);
+          if(wait == 1){
+            waitpid(pid, NULL, 0);              // wait for completion  
+          }
+     }
+}
 int processBuiltInCommand(char * cmd)   //check for and process builtin commands
 {
 

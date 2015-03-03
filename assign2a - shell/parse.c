@@ -62,7 +62,7 @@ commQ parse(char *line)
 	char *temp = NULL;
 
 	init_commQ(&ret);
-
+	ret.wait = 1;
 	temp = strtok(line, TOKENIZER);
 	//printf("temp: %s\n", temp);
 	//insertToken(temp, &ret);
@@ -74,7 +74,12 @@ commQ parse(char *line)
 	{
 		//printf("temp: %s\n", temp);
 		//printf("is empty? %d\n", ret.isEmpty);
-		insertToken(temp, &ret);
+		if(strcmp(temp, "&") != 0){
+			insertToken(temp, &ret);
+		}
+		if(strcmp(temp, "&") == 0){
+			ret.wait = 0;
+		}
 		//printf("commQ: no.of arguments: %d\n", ret.currArg);
 		temp = strtok(NULL, TOKENIZER);
 	}
