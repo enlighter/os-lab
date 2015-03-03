@@ -77,7 +77,7 @@ commQ parse(char *line)
 		if(strcmp(temp, "&") != 0){
 			insertToken(temp, &ret);
 		}
-		if(strcmp(temp, "&") == 0){
+		else{
 			ret.wait = 0;
 		}
 		//printf("commQ: no.of arguments: %d\n", ret.currArg);
