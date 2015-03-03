@@ -11,7 +11,7 @@
 
 int processBuiltInCommand(char *);	//check for and process builtin commands
 int processOtherCommands(char *);
-//void executeBuiltInCommand(int);
+void executeExecutable(char **, int);
 int executeCdCommand(char *);
 int executePwdCommand();
 int executeMkdirCommand(char *);
