@@ -9,9 +9,12 @@ typedef struct command_queue		//struct to store parsed commands for a line in a 
 {
 	/* data */
 	short isEmpty;					//signifies if there is no command
+	short wait;						//wait or not
+	short outputRedirection;		//whether redirection of output to be done
+	short inputRedirection;			//whether redirection of input to be done
 	int currArg;					//no. of current arguments
 	char *command[MAX_ARG_NUM+1];	//command[0]=command, rest are arguments for command
-	short wait;						// wait or not
+	char *redirectionArg;			//argument for I/O redirection
 
 } commQ;
 
