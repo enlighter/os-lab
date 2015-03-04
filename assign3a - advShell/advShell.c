@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <string.h>
 //#include <pwd.h>
-//#include <fcntl.h>
+#include <fcntl.h>      //for fcntl() to impplement I/O redirection
 #include <sys/mman.h>
 #include <sys/wait.h>
 #include <sys/types.h>
