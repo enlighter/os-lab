@@ -92,7 +92,31 @@ commQ parse(char *line)
 		}
 		else if (strcmp(temp, ">") == 0)
 		{
-			
+			temp = strtok(NULL, TOKENIZER);
+			if(temp == NULL)
+			{
+				printf("### Redirection argument mismatch!\n");
+				break;		//disregard everything else after this
+			}
+			else
+			{
+				ret.outputRedirection = 1;
+				ret.redirectionArg = strdup(temp);
+			}
+		}
+		else if (strcmp(temp, "<") == 0)
+		{
+			temp = strtok(NULL, TOKENIZER);
+			if(temp == NULL)
+			{
+				printf("### Redirection argument mismatch!\n");
+				break;		//disregard everything else after this
+			}
+			else
+			{
+				ret.inputRedirection = 1;
+				ret.redirectionArg = strdup(temp);
+			}
 		}
 		else
 		{

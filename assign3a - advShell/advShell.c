@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
   return SUCCESS;
 }
 
-void  executeExecutable(char **argv, int wait)
+void  executeExecutable(char **argv, int wait)  //for execution of non-builtin executable commands
 {
      pid_t  pid;
      int    status;
@@ -101,6 +101,7 @@ void  executeExecutable(char **argv, int wait)
           }
      }
 }
+
 int processBuiltInCommand(char * cmd)   //check for and process builtin commands
 {
 

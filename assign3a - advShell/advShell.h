@@ -10,7 +10,7 @@
 #define NO_SUCH_BUILTIN -2
 
 int processBuiltInCommand(char *);	//check for and process builtin commands
-int processOtherCommands(char *);
+//int processOtherCommands(char *);
 void executeExecutable(char **, int);
 int executeCdCommand(char *);
 int executePwdCommand();
