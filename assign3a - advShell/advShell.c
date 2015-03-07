@@ -52,22 +52,33 @@ int main(int argc, char *argv[])
 
     strcpy(tempParsee, line); //copy line to temp string to be parsed
 
-    if (processBuiltInCommand(tempParsee) != NO_SUCH_BUILTIN)
+    direction = parse(tempParsee);        //parsing the command line to get direction
+
+    if(direction.isEmpty)
+      continue;
+
+    if(direction.outputRedirection)
+    {
+      if( (output2File = freopen("advShell.output.txt", "w", stdout)) == NULL)    //opening output file and redirecting stdout to the file
+      {
+        perror("freopen: ");
+      }
+
+      if( fcntl( fileno(stdout), F_DUPFD, fileno(stderr)) == FAULT)
+      /* duplicating stderr file stream to stdout so that stderr also gets written to the file associated with stdout */
+      {
+        perror("fnctl: ");
+      }
+    }
+
+    if ( processBuiltInCommand(&direction) != NO_SUCH_BUILTIN)
     {
       //printf("command = %s",line);
       //executeBuiltInCommand(command);
     }
     else
     {
-      //printf("PATH: %s\n", getenv("PATH"));
-      //system(line);
-      //int wait = 1;
-      direction = parse(line); 
-      if(direction.isEmpty){
-        printf("Direction is empty\n");
-        return FAULT;
-      }
-
+      
       //if( direction.currArg > 0 && strcmp(direction.command[1], "&") == 0){
         //wait = 0;
       //}
@@ -77,7 +88,9 @@ int main(int argc, char *argv[])
   }
   /*----------------------------*/
 
+  fclose(output2File);
   free_commQ(&direction);
+
   return SUCCESS;
 }
 
@@ -103,33 +116,16 @@ void  executeExecutable(char **argv, int wait)  //for execution of non-builtin e
      }
 }
 
-int processBuiltInCommand(char * cmd)   //check for and process builtin commands
+int processBuiltInCommand(commQ *direction)   //check for and process builtin commands
 {
 
   //printf("command : %s", cmd);
-  direction = parse(cmd);        //parsing the command line to get direction
+  
 
-  //print_commQ(&direction);      //for debugging
-  //printf("direction.currArg = %d\n", direction.currArg);
-
-  if(direction.isEmpty)
-    return FAULT;
-
-  if(direction.outputRedirection)
-  {
-    output2File = freopen("advShell.output.txt", "w", stdout);    //opening output file and redirecting stdout to the file
-
-    if( fcntl( fileno(stdout), F_DUPFD, fileno(stderr)) == FAULT)
-    /* duplicating stderr file stream to stdout so that stderr also gets written to the file associated with stdout */
-    {
-      perror("fnctl: ");
-    }
-  }
-
-  if( strcmp(direction.command[0], "exit") == 0){
+  if( strcmp(direction->command[0], "exit") == 0){
   /* check if main command is exit*/
 
-    if(direction.currArg != 0){
+    if(direction->currArg != 0){
     /* check if there are arguments in direction */
 
       printArgumentError();
@@ -139,10 +135,10 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
     return executeExitCommand();  //execute exit builtin when everything checks out
 
     }
-  else if( strcmp(direction.command[0], "pwd") == 0){
+  else if( strcmp(direction->command[0], "pwd") == 0){
   /* check if main command is pwd*/
 
-    if(direction.currArg != 0){
+    if(direction->currArg != 0){
     /* check if there are arguments in direction */
 
       printArgumentError();
@@ -152,13 +148,13 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return executePwdCommand(); //execute pwd builtin when everything checks out
 
     }
-  else if( strcmp(direction.command[0], "ls") == 0){
+  else if( strcmp(direction->command[0], "ls") == 0){
   /* check if main command is ls*/
 
-    if(direction.currArg != 0 ){
+    if(direction->currArg != 0 ){
     /* check if there are arguments in direction */
 
-      if(strcmp(direction.command[1], "-l") == 0 && direction.currArg == 1){
+      if(strcmp(direction->command[1], "-l") == 0 && direction->currArg == 1){
         return executeLsMinusLCommand();    //currently the only mode supported
       }
 
@@ -170,10 +166,10 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return executeLsCommand();  //execute ls builtin when everything checks out
 
     }
-  else if( strcmp(direction.command[0], "cd") == 0){
+  else if( strcmp(direction->command[0], "cd") == 0){
   /* check if main command is cd*/
 
-    if(direction.currArg != 1){
+    if(direction->currArg != 1){
     /* check if there are proper no. of arguments in direction */
 
       printArgumentError();
@@ -182,26 +178,26 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
 
       //print_commQ(&direction);      //for debugging
 
-      return executeCdCommand(direction.command[1]);  //execute cd builtin when everything checks out
+      return executeCdCommand(direction->command[1]);  //execute cd builtin when everything checks out
 
     }
-  else if( strcmp(direction.command[0], "cp") == 0){
+  else if( strcmp(direction->command[0], "cp") == 0){
   /* check if main command is cp*/
 
-    if(direction.currArg != 2){
+    if(direction->currArg != 2){
     /* check if there are proper no. of arguments in direction */
 
       printArgumentError();
       return FAULT;
       }
 
-      return executeCpCommand(direction.command[1], direction.command[2]);  //execute cp builtin when everything checks out
+      return executeCpCommand(direction->command[1], direction->command[2]);  //execute cp builtin when everything checks out
 
     }
-  else if( strcmp(direction.command[0], "mkdir") == 0){
+  else if( strcmp(direction->command[0], "mkdir") == 0){
   /* check if main command is mkdir*/
 
-    if(direction.currArg == 0){
+    if(direction->currArg == 0){
     /* check if there are proper no. of arguments in direction */
 
       printArgumentError();
@@ -211,9 +207,9 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       int i=0;
       char *temp;
 
-      for(i=1; i<=direction.currArg; i++)
+      for(i=1; i <= direction->currArg; i++)
       {
-          temp = direction.command[i];
+          temp = direction->command[i];
 
           if(!executeMkdirCommand(temp))  //try to execute mkdir builtin for all arguments
             continue;
@@ -224,10 +220,10 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return SUCCESS;
 
     }
-  else if( strcmp(direction.command[0], "rmdir") == 0){
+  else if( strcmp(direction->command[0], "rmdir") == 0){
   /* check if main command is rmdir */
     
-    if(direction.currArg == 0){
+    if(direction->currArg == 0){
     /* check if there are proper no. of arguments in direction */
 
       printArgumentError();
@@ -237,9 +233,9 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       int i=0;
       char *temp;
 
-      for(i=1; i<=direction.currArg; i++)
+      for(i=1; i <= direction->currArg; i++)
       {
-          temp = direction.command[i];
+          temp = direction->command[i];
 
           if(!executeRmdirCommand(temp))  //try to execute rmdir builtin for all arguments
             continue;
