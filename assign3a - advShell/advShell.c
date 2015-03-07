@@ -20,13 +20,14 @@
 /*--------NECESSARY HEADERS INCLUDED---------*/
 
 commQ direction;      //global structure instance for storing parsed command
-FILE *output2File = NULL;   //global output redirection pointer
+int output2File = -100;   //global output redirection pointer
 
 int main(int argc, char *argv[]) 
 {
   char line[MAX_LENGTH], cwd[MAX_LENGTH];
   /* to store command line and to store current directory full path */
   char tempParsee[MAX_LENGTH];  //temporary sring to store the string to be parsed
+  int stdoutBackup = fileno(stdout), stderrBackup = fileno(stderr);
 
   //int command=0;
   init_commQ(&direction);    //intialize structure
@@ -60,22 +61,19 @@ int main(int argc, char *argv[])
     if(direction.outputRedirection)
     {
 
-      /*printf("*** direction.redirectionArg = %s\n", direction.redirectionArg);
-
-      if( direction.redirectionArg == NULL)
+      if( (stdoutBackup = dup(fileno(stdout)) ) == FAULT) //Save current stdout for use later
       {
-        printf("### Aborting I/O redirection\n");
-      }*/
-      //else 
-      if( freopen(direction.redirectionArg, "w", stdout) == NULL)    //opening output file and redirecting stdout to the file
-      {
-        perror("freopen: ");
+        perror("dup: ");
       }
-      /* else if( fcntl( fileno(stdout), F_DUPFD, fileno(stderr)) == FAULT)
-      // duplicating stderr file stream to stdout so that stderr also gets written to the file associated with stdout
+      else if( (output2File = open(direction.redirectionArg, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR)) == FAULT)
+      //opening file for saving all output
       {
-        perror("fnctl: ");
-      } */
+        perror("open: ");
+      }
+      else if( dup2(output2File, fileno(stdout)) == FAULT ) //redirect stdout to open output file
+      {
+        perror("dup2: ");
+      }
       else if( !setvbuf(stdout, NULL, _IOLBF, BUFSIZ))
       // setting buffer mode for stdout & stderr to file to "Line buffer" mode
       {
@@ -91,16 +89,23 @@ int main(int argc, char *argv[])
     else
     {
       
-      //if( direction.currArg > 0 && strcmp(direction.command[1], "&") == 0){
-        //wait = 0;
-      //}
-      //printf("wait : %d[%d] \n",direction.wait,direction.currArg);
       executeExecutable(direction.command,direction.wait);
     }
 
-    fflush(stdout);   //flush redirected stream
-    //fclean(stderr);
-    fclose(stdout);   //close redirected stream
+    //printf("fileno(stdout) = %d\n", fileno(stdout));
+
+    if(direction.outputRedirection)
+    {
+      /* Restore stdout */
+      if( dup2(stdoutBackup, fileno(stdout)) == FAULT)
+      {
+        perror("dup2: ");
+      }
+      if( close(stdoutBackup) == FAULT)
+      {
+        perror("close: ");
+      }
+    }
   }
   /*----------------------------*/
 
