@@ -20,6 +20,7 @@
 /*--------NECESSARY HEADERS INCLUDED---------*/
 
 commQ direction;      //global structure instance for storing parsed command
+FILE *output2File = NULL;   //global output redirection pointer
 
 int main(int argc, char *argv[]) 
 {
@@ -113,6 +114,17 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
 
   if(direction.isEmpty)
     return FAULT;
+
+  if(direction.outputRedirection)
+  {
+    output2File = freopen("advShell.output.txt", "w", stdout);    //opening output file and redirecting stdout to the file
+
+    if( fcntl( fileno(stdout), F_DUPFD, fileno(stderr)) == FAULT)
+    /* duplicating stderr file stream to stdout so that stderr also gets written to the file associated with stdout */
+    {
+      perror("fnctl: ");
+    }
+  }
 
   if( strcmp(direction.command[0], "exit") == 0){
   /* check if main command is exit*/
@@ -369,6 +381,7 @@ int executeLsMinusLCommand(){
       printf("p");
     else if(S_ISSOCK(buf.st_mode))
       printf("s");
+
     //File Permissions P-Full Permissions AP-Actual Permissions
     for(i=0,j=(1<<8);i<9;i++,j>>=1)
       AP[i]= (buf.st_mode & j ) ? P[i] : '-' ;
@@ -411,7 +424,7 @@ int executeCpCommand(char * arg1, char* arg2){
   strcat(dest, "/");
   strcat(dest, arg2);
 
-  struct stat attr1,attr2;
+  struct stat attr1, attr2;
   stat(arg1, &attr1);
   stat(dest, &attr2);
 
@@ -429,8 +442,9 @@ int executeCpCommand(char * arg1, char* arg2){
     printf("Read Permission, Access Denied !!! \n");
   }
 
-  source=fopen(arg1,"r");
-  target=fopen(dest,"w");
+  source = fopen(arg1,"r");
+  target = fopen(dest,"w");
+
   if(source == NULL)
   {
     printf("Unable to open source file..ERROR in opening file!!\n");
