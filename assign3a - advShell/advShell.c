@@ -59,15 +59,27 @@ int main(int argc, char *argv[])
 
     if(direction.outputRedirection)
     {
-      if( (output2File = freopen("advShell.output.txt", "w", stdout)) == NULL)    //opening output file and redirecting stdout to the file
+
+      /*printf("*** direction.redirectionArg = %s\n", direction.redirectionArg);
+
+      if( direction.redirectionArg == NULL)
+      {
+        printf("### Aborting I/O redirection\n");
+      }*/
+      //else 
+      if( freopen(direction.redirectionArg, "w", stdout) == NULL)    //opening output file and redirecting stdout to the file
       {
         perror("freopen: ");
       }
-
-      if( fcntl( fileno(stdout), F_DUPFD, fileno(stderr)) == FAULT)
-      /* duplicating stderr file stream to stdout so that stderr also gets written to the file associated with stdout */
+      /* else if( fcntl( fileno(stdout), F_DUPFD, fileno(stderr)) == FAULT)
+      // duplicating stderr file stream to stdout so that stderr also gets written to the file associated with stdout
       {
         perror("fnctl: ");
+      } */
+      else if( !setvbuf(stdout, NULL, _IOLBF, BUFSIZ))
+      // setting buffer mode for stdout & stderr to file to "Line buffer" mode
+      {
+        perror("setvbuf: ");
       }
     }
 
@@ -85,10 +97,14 @@ int main(int argc, char *argv[])
       //printf("wait : %d[%d] \n",direction.wait,direction.currArg);
       executeExecutable(direction.command,direction.wait);
     }
+
+    fflush(stdout);   //flush redirected stream
+    //fclean(stderr);
+    fclose(stdout);   //close redirected stream
   }
   /*----------------------------*/
 
-  fclose(output2File);
+  //fclose(output2File);
   free_commQ(&direction);
 
   return SUCCESS;

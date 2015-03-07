@@ -96,6 +96,7 @@ commQ parse(char *line)
 			if(temp == NULL)
 			{
 				printf("### Redirection argument mismatch!\n");
+				//printf("ret.outputRedirection = %d\n", ret.outputRedirection);
 				break;		//disregard everything else after this
 			}
 			else
