@@ -1,6 +1,6 @@
 /* Please include parse.h file in the same directory */
 
-//#include "parse.h"
+#include "parse.h"
 
 #define MAX_LENGTH  1024
 #define CD          1
@@ -13,7 +13,6 @@
 #define SUCCESS		0
 #define NO_SUCH_BUILTIN -2
 
-extern commQ;
 
 int processBuiltInCommand(commQ *);	//check for and process builtin commands
 //int processOtherCommands(char *);

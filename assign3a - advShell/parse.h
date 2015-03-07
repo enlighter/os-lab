@@ -5,6 +5,9 @@
 #define MAX_LENGTH	1024			//the maximum length of command-line
 #define TOKENIZER	" \n"			//to tokenize a string for parsing
 
+#ifndef PARSESTRUCT_H				//Include-Guard command_queue structure
+#define PARSESTRUCT_H
+
 typedef struct command_queue		//struct to store parsed commands for a line in a linked-list
 {
 	/* data */
@@ -17,6 +20,8 @@ typedef struct command_queue		//struct to store parsed commands for a line in a 
 	char *redirectionArg;			//argument for I/O redirection
 
 } commQ;
+
+#endif		/* PARSESTRUCT_H */
 
 void init_commQ(commQ *);			//initialize a commQ instance
 void free_commQ(commQ *);			//free dynamic memory from commQ instance that is no longer required
