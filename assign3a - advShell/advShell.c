@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <string.h>
 //#include <pwd.h>
-//#include <fcntl.h>
+#include <fcntl.h>      //for fcntl() to impplement I/O redirection
 #include <sys/mman.h>
 #include <sys/wait.h>
 #include <sys/types.h>
@@ -20,12 +20,14 @@
 /*--------NECESSARY HEADERS INCLUDED---------*/
 
 commQ direction;      //global structure instance for storing parsed command
+int output2File = -100;   //global output redirection pointer
 
 int main(int argc, char *argv[]) 
 {
   char line[MAX_LENGTH], cwd[MAX_LENGTH];
   /* to store command line and to store current directory full path */
   char tempParsee[MAX_LENGTH];  //temporary sring to store the string to be parsed
+  int stdoutBackup = fileno(stdout), stderrBackup = fileno(stderr);
 
   //int command=0;
   init_commQ(&direction);    //intialize structure
@@ -51,36 +53,69 @@ int main(int argc, char *argv[])
 
     strcpy(tempParsee, line); //copy line to temp string to be parsed
 
-    if (processBuiltInCommand(tempParsee) != NO_SUCH_BUILTIN)
+    direction = parse(tempParsee);        //parsing the command line to get direction
+
+    if(direction.isEmpty)
+      continue;
+
+    if(direction.outputRedirection)
+    {
+
+      if( (stdoutBackup = dup(fileno(stdout)) ) == FAULT) //Save current stdout for use later
+      {
+        perror("dup: ");
+      }
+      else if( (output2File = open(direction.redirectionArg, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR)) == FAULT)
+      //opening file for saving all output
+      {
+        perror("open: ");
+      }
+      else if( dup2(output2File, fileno(stdout)) == FAULT ) //redirect stdout to open output file
+      {
+        perror("dup2: ");
+      }
+      else if( !setvbuf(stdout, NULL, _IOLBF, BUFSIZ))
+      // setting buffer mode for stdout & stderr to file to "Line buffer" mode
+      {
+        perror("setvbuf: ");
+      }
+    }
+
+    if ( processBuiltInCommand(&direction) != NO_SUCH_BUILTIN)
     {
       //printf("command = %s",line);
       //executeBuiltInCommand(command);
     }
     else
     {
-      //printf("PATH: %s\n", getenv("PATH"));
-      //system(line);
-      //int wait = 1;
-      direction = parse(line); 
-      if(direction.isEmpty){
-        printf("Direction is empty\n");
-        return FAULT;
-      }
-
-      //if( direction.currArg > 0 && strcmp(direction.command[1], "&") == 0){
-        //wait = 0;
-      //}
-      //printf("wait : %d[%d] \n",direction.wait,direction.currArg);
+      
       executeExecutable(direction.command,direction.wait);
+    }
+
+    //printf("fileno(stdout) = %d\n", fileno(stdout));
+
+    if(direction.outputRedirection)
+    {
+      /* Restore stdout */
+      if( dup2(stdoutBackup, fileno(stdout)) == FAULT)
+      {
+        perror("dup2: ");
+      }
+      if( close(stdoutBackup) == FAULT)
+      {
+        perror("close: ");
+      }
     }
   }
   /*----------------------------*/
 
+  //fclose(output2File);
   free_commQ(&direction);
+
   return SUCCESS;
 }
 
-void  executeExecutable(char **argv, int wait)
+void  executeExecutable(char **argv, int wait)  //for execution of non-builtin executable commands
 {
      pid_t  pid;
      int    status;
@@ -101,22 +136,17 @@ void  executeExecutable(char **argv, int wait)
           }
      }
 }
-int processBuiltInCommand(char * cmd)   //check for and process builtin commands
+
+int processBuiltInCommand(commQ *direction)   //check for and process builtin commands
 {
 
   //printf("command : %s", cmd);
-  direction = parse(cmd);        //parsing the command line to get direction
+  
 
-  //print_commQ(&direction);      //for debugging
-  //printf("direction.currArg = %d\n", direction.currArg);
-
-  if(direction.isEmpty)
-    return FAULT;
-
-  if( strcmp(direction.command[0], "exit") == 0){
+  if( strcmp(direction->command[0], "exit") == 0){
   /* check if main command is exit*/
 
-    if(direction.currArg != 0){
+    if(direction->currArg != 0){
     /* check if there are arguments in direction */
 
       printArgumentError();
@@ -126,10 +156,10 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
     return executeExitCommand();  //execute exit builtin when everything checks out
 
     }
-  else if( strcmp(direction.command[0], "pwd") == 0){
+  else if( strcmp(direction->command[0], "pwd") == 0){
   /* check if main command is pwd*/
 
-    if(direction.currArg != 0){
+    if(direction->currArg != 0){
     /* check if there are arguments in direction */
 
       printArgumentError();
@@ -139,13 +169,13 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return executePwdCommand(); //execute pwd builtin when everything checks out
 
     }
-  else if( strcmp(direction.command[0], "ls") == 0){
+  else if( strcmp(direction->command[0], "ls") == 0){
   /* check if main command is ls*/
 
-    if(direction.currArg != 0 ){
+    if(direction->currArg != 0 ){
     /* check if there are arguments in direction */
 
-      if(strcmp(direction.command[1], "-l") == 0 && direction.currArg == 1){
+      if(strcmp(direction->command[1], "-l") == 0 && direction->currArg == 1){
         return executeLsMinusLCommand();    //currently the only mode supported
       }
 
@@ -157,10 +187,10 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return executeLsCommand();  //execute ls builtin when everything checks out
 
     }
-  else if( strcmp(direction.command[0], "cd") == 0){
+  else if( strcmp(direction->command[0], "cd") == 0){
   /* check if main command is cd*/
 
-    if(direction.currArg != 1){
+    if(direction->currArg != 1){
     /* check if there are proper no. of arguments in direction */
 
       printArgumentError();
@@ -169,26 +199,26 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
 
       //print_commQ(&direction);      //for debugging
 
-      return executeCdCommand(direction.command[1]);  //execute cd builtin when everything checks out
+      return executeCdCommand(direction->command[1]);  //execute cd builtin when everything checks out
 
     }
-  else if( strcmp(direction.command[0], "cp") == 0){
+  else if( strcmp(direction->command[0], "cp") == 0){
   /* check if main command is cp*/
 
-    if(direction.currArg != 2){
+    if(direction->currArg != 2){
     /* check if there are proper no. of arguments in direction */
 
       printArgumentError();
       return FAULT;
       }
 
-      return executeCpCommand(direction.command[1], direction.command[2]);  //execute cp builtin when everything checks out
+      return executeCpCommand(direction->command[1], direction->command[2]);  //execute cp builtin when everything checks out
 
     }
-  else if( strcmp(direction.command[0], "mkdir") == 0){
+  else if( strcmp(direction->command[0], "mkdir") == 0){
   /* check if main command is mkdir*/
 
-    if(direction.currArg == 0){
+    if(direction->currArg == 0){
     /* check if there are proper no. of arguments in direction */
 
       printArgumentError();
@@ -198,9 +228,9 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       int i=0;
       char *temp;
 
-      for(i=1; i<=direction.currArg; i++)
+      for(i=1; i <= direction->currArg; i++)
       {
-          temp = direction.command[i];
+          temp = direction->command[i];
 
           if(!executeMkdirCommand(temp))  //try to execute mkdir builtin for all arguments
             continue;
@@ -211,10 +241,10 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       return SUCCESS;
 
     }
-  else if( strcmp(direction.command[0], "rmdir") == 0){
+  else if( strcmp(direction->command[0], "rmdir") == 0){
   /* check if main command is rmdir */
     
-    if(direction.currArg == 0){
+    if(direction->currArg == 0){
     /* check if there are proper no. of arguments in direction */
 
       printArgumentError();
@@ -224,9 +254,9 @@ int processBuiltInCommand(char * cmd)   //check for and process builtin commands
       int i=0;
       char *temp;
 
-      for(i=1; i<=direction.currArg; i++)
+      for(i=1; i <= direction->currArg; i++)
       {
-          temp = direction.command[i];
+          temp = direction->command[i];
 
           if(!executeRmdirCommand(temp))  //try to execute rmdir builtin for all arguments
             continue;
@@ -368,6 +398,7 @@ int executeLsMinusLCommand(){
       printf("p");
     else if(S_ISSOCK(buf.st_mode))
       printf("s");
+
     //File Permissions P-Full Permissions AP-Actual Permissions
     for(i=0,j=(1<<8);i<9;i++,j>>=1)
       AP[i]= (buf.st_mode & j ) ? P[i] : '-' ;
@@ -410,7 +441,7 @@ int executeCpCommand(char * arg1, char* arg2){
   strcat(dest, "/");
   strcat(dest, arg2);
 
-  struct stat attr1,attr2;
+  struct stat attr1, attr2;
   stat(arg1, &attr1);
   stat(dest, &attr2);
 
@@ -428,8 +459,9 @@ int executeCpCommand(char * arg1, char* arg2){
     printf("Read Permission, Access Denied !!! \n");
   }
 
-  source=fopen(arg1,"r");
-  target=fopen(dest,"w");
+  source = fopen(arg1,"r");
+  target = fopen(dest,"w");
+
   if(source == NULL)
   {
     printf("Unable to open source file..ERROR in opening file!!\n");
