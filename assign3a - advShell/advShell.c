@@ -61,7 +61,8 @@ int main(int argc, char *argv[])
     if(direction.outputRedirection)
     {
 
-      if( (stdoutBackup = dup(fileno(stdout)) ) == FAULT) //Save current stdout for use later
+      if( (stdoutBackup = dup(fileno(stdout)) ) == FAULT || (stderrBackup = dup(fileno(stderr)) ) == FAULT)
+      //Save current stdout for use later
       {
         perror("dup: ");
       }
@@ -70,11 +71,12 @@ int main(int argc, char *argv[])
       {
         perror("open: ");
       }
-      else if( dup2(output2File, fileno(stdout)) == FAULT ) //redirect stdout to open output file
+      else if( dup2(output2File, fileno(stdout)) == FAULT || dup2(output2File, fileno(stderr)) == FAULT)
+      //redirect stdout to open output file
       {
         perror("dup2: ");
       }
-      else if( !setvbuf(stdout, NULL, _IOLBF, BUFSIZ))
+      else if( setvbuf(stdout, NULL, _IOLBF, BUFSIZ) && setvbuf(stderr, NULL, _IOLBF, BUFSIZ))
       // setting buffer mode for stdout & stderr to file to "Line buffer" mode
       {
         perror("setvbuf: ");
@@ -83,7 +85,7 @@ int main(int argc, char *argv[])
 
     if ( processBuiltInCommand(&direction) != NO_SUCH_BUILTIN)
     {
-      //printf("command = %s",line);
+      //fprintf(stderr, "Err stream test: command = %s",line);
       //executeBuiltInCommand(command);
     }
     else
@@ -97,11 +99,14 @@ int main(int argc, char *argv[])
     if(direction.outputRedirection)
     {
       /* Restore stdout */
-      if( dup2(stdoutBackup, fileno(stdout)) == FAULT)
+      fflush(stdout);
+      fflush(stderr);
+
+      if( dup2(stdoutBackup, fileno(stdout)) == FAULT || dup2(stderrBackup, fileno(stderr)) == FAULT)
       {
         perror("dup2: ");
       }
-      if( close(stdoutBackup) == FAULT)
+      if( close(stdoutBackup) == FAULT || close(stderrBackup))
       {
         perror("close: ");
       }
