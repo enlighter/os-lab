@@ -21,13 +21,14 @@
 
 commQ direction;      //global structure instance for storing parsed command
 int output2File = -100;   //global output redirection pointer
+int input4mFile = -100;   //global input redirection pointer
 
 int main(int argc, char *argv[]) 
 {
   char line[MAX_LENGTH], cwd[MAX_LENGTH];
   /* to store command line and to store current directory full path */
   char tempParsee[MAX_LENGTH];  //temporary sring to store the string to be parsed
-  int stdoutBackup = fileno(stdout), stderrBackup = fileno(stderr);
+  int stdoutBackup = fileno(stdout), stderrBackup = fileno(stderr), stdinBackup = fileno(stdin);
 
   //int command=0;
   init_commQ(&direction);    //intialize structure
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
     {
 
       if( (stdoutBackup = dup(fileno(stdout)) ) == FAULT || (stderrBackup = dup(fileno(stderr)) ) == FAULT)
-      //Save current stdout for use later
+      //Save current stdout & stderr for use later
       {
         perror("dup: ");
       }
@@ -78,6 +79,30 @@ int main(int argc, char *argv[])
       }
       else if( setvbuf(stdout, NULL, _IOLBF, BUFSIZ) && setvbuf(stderr, NULL, _IOLBF, BUFSIZ))
       // setting buffer mode for stdout & stderr to file to "Line buffer" mode
+      {
+        perror("setvbuf: ");
+      }
+    }
+
+    if(direction.inputRedirection)
+    {
+      if( (stdinBackup = dup(fileno(stdin)) ) == FAULT )
+      //Save current stdin for use later
+      {
+        perror("dup: ");
+      }
+      else if( (input4mFile = open(direction.redirectionArg, O_RDONLY)) == FAULT)
+      //opening file for reading all input
+      {
+        perror("open: ");
+      }
+      else if( dup2(input4mFile, fileno(stdin)) == FAULT )
+      //redirect stdin to open input file
+      {
+        perror("dup2: ");
+      }
+      else if( setvbuf(stdin, NULL, _IOLBF, BUFSIZ) )
+      // setting buffer mode for stdin (file) to "Line buffer" mode
       {
         perror("setvbuf: ");
       }
@@ -106,7 +131,22 @@ int main(int argc, char *argv[])
       {
         perror("dup2: ");
       }
-      if( close(stdoutBackup) == FAULT || close(stderrBackup))
+      if( close(stdoutBackup) == FAULT || close(stderrBackup) == FAULT)
+      {
+        perror("close: ");
+      }
+    }
+
+    if(direction.outputRedirection)
+    {
+      /* Restore stdout */
+      fflush(stdin);
+    
+      if( dup2(stdinBackup, fileno(stdin)) == FAULT )
+      {
+        perror("dup2: ");
+      }
+      if( close(stdinBackup) == FAULT )
       {
         perror("close: ");
       }
