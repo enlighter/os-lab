@@ -25,6 +25,8 @@ int executeMkdirCommand(char *);
 int executeRmdirCommand(char *);
 int executeLsCommand();
 int executeLsMinusLCommand();
+/* cp implementation faulty, to be debugged */
 int executeCpCommand(char *, char*);
+/*--------------*/
 int executeExitCommand();
 inline void printArgumentError();
