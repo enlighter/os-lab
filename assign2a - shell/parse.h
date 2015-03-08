@@ -3,7 +3,7 @@
 
 #define	MAX_ARG_NUM	5				//the maximum no. of arguments supported for a command
 #define MAX_LENGTH	1024			//the maximum length of command-line
-#define TOKENIZER	" \n"			//to tokenize a string for parsing
+#define TOKENIZER	" ()\n"			//to tokenize a string for parsing
 
 typedef struct command_queue		//struct to store parsed commands for a line in a linked-list
 {
