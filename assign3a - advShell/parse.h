@@ -4,6 +4,7 @@
 #define	MAX_ARG_NUM	5				//the maximum no. of arguments supported for a command
 #define MAX_LENGTH	1024			//the maximum length of command-line
 #define TOKENIZER	" ()\n"			//to tokenize a string for parsing
+#define TOKENIZER_S	" ()<>\n"		//special tokenizer for parsing special command arguments
 
 #ifndef PARSESTRUCT_H				//Include-Guard command_queue structure
 #define PARSESTRUCT_H

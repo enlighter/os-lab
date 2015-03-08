@@ -92,7 +92,7 @@ commQ parse(char *line)
 		}
 		else if (strcmp(temp, ">") == 0)
 		{
-			temp = strtok(NULL, TOKENIZER);
+			temp = strtok(NULL, TOKENIZER_S);
 			if(temp == NULL)
 			{
 				printf("### Redirection argument mismatch!\n");
@@ -107,7 +107,7 @@ commQ parse(char *line)
 		}
 		else if (strcmp(temp, "<") == 0)
 		{
-			temp = strtok(NULL, TOKENIZER);
+			temp = strtok(NULL, TOKENIZER_S);
 			if(temp == NULL)
 			{
 				printf("### Redirection argument mismatch!\n");
