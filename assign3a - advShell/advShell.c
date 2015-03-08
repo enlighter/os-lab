@@ -480,54 +480,43 @@ int executeCpCommand(char * arg1, char* arg2){
   if(getcwd(currPos, sizeof(currPos)) == NULL)
   {
       perror("getcwd() error");
+      return FAULT;
   }
 
   strcpy(dest, currPos);
   strcat(dest, "/");
   strcat(dest, arg2);
 
-  struct stat attr1, attr2;
-  stat(arg1, &attr1);
-  stat(dest, &attr2);
+  clock_t start,end;
+  start = clock();
 
-  //printf("Last modified source time: %s", ctime(&attr1.st_ctime));
-  //printf("Last modified target time: %s", ctime(&attr2.st_ctime));
-
-  int timeDiff = difftime(attr2.st_ctime,attr1.st_ctime) > 0 ? 1 : -1;
-
-  FILE *source,*target;
-  char ch;
-  if( access( arg1, F_OK ) == -1 ){
-    printf("File missing !!! \n");
-  }
-  else if( access( arg1, R_OK ) == -1 ){
-    printf("Read Permission, Access Denied !!! \n");
-  }
-
-  source = fopen(arg1,"r");
-  target = fopen(dest,"w");
-
-  if(source == NULL)
+  int source, target;
+  char buf[BUFSIZ];
+  size_t size;
+  
+  if( (source = open(arg1, O_RDONLY, 0)) == FAULT)
   {
-    printf("Unable to open source file..ERROR in opening file!!\n");
+    perror("open: ");
     return FAULT;
   }
-
-  if( target != NULL && access(  dest, W_OK ) == -1 ){
-    printf("Write Permission, Access Denied !!! \n");
+  if( (target = open(dest, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR)) == FAULT)
+  {
+    perror("open: ");
     return FAULT;
   }
-
-  if( target != NULL && timeDiff == 1){
-    printf("Error !!! Destination has a newer file !!! \n");
-    return FAULT;
+  
+  while((size = read(source, buf, BUFSIZ)) > 0)
+  {
+    write(target, buf, size); /*writing to the target file*/
   }
+  
+  printf("Copy is Successful\n");
+  close(source);
+  close(target);
 
-  while((ch=fgetc(source))!=EOF)
-  fputc(ch,target);/*writing to the target file*/
-  printf("Copy Successful !!!\n");
-  fclose(source);
-  fclose(target);
+  end = clock();
+
+  printf("Time on operation (sec) : %f\n", (double)(end - start) / CLOCKS_PER_SEC );
 
   return SUCCESS;
 }
