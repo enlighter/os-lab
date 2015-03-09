@@ -16,8 +16,8 @@ int main(){
 	int fd2[5][2];
 	int i,n,j;
 	char msg[BUFF];
-	char * argv[4];
-	argv[0] = "child.o";
+	char * argv[5];
+	argv[0] = strdup("./child.out");
 	time_t t;
 	srand((unsigned) time(&t));
 	for(i=0; i<5; i++){
@@ -36,8 +36,9 @@ int main(){
 			sprintf(argv[1],"%d",0);
 			sprintf(argv[2],"%d",fd1[i][0]);
 			sprintf(argv[3],"%d",fd2[i][1]);
-			if(execv(argv[0],argv) == -1){
-				printf("Error in excecuting child process\n");
+			argv[4] = NULL;
+			if(execvp(argv[0],argv) == -1){
+				perror("child execution: ");
 				break;
 			}
 		}
@@ -129,4 +130,6 @@ int main(){
 			printf("Modified value of k:%d\n",k);
 		}
 	}
+
+	free(argv[0]);
 }	
