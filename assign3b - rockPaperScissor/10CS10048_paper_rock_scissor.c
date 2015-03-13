@@ -123,11 +123,13 @@ int master()		//host of the game
 		else			//P (master) executing
 		{
 			printf("cPID = %d, dPID = %d\n", *cPID, *dPID);
-			
-			while(cPID == 0 || dPID == 0)	//wait till children are created
+
+			while(*cPID == 0 || *dPID == 0)	//wait till children are created
 			{
-				printf("Waiting for children to be created...\n");
+				printf("Waiting for children to be created... : cPID = %d, dPID = %d \n", *cPID, *dPID);
 			}
+
+			printf("Master: Out of loop : cPID = %d, dPID = %d\n", *cPID, *dPID);			
 			
       		kill(pidC, SIGTSTP);        /* Send stop signal to C */
       		kill(pidD, SIGTSTP);        /* Send stop signal to D */
