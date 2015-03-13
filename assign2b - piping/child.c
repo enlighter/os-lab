@@ -1,3 +1,5 @@
+/* Compile child.c into child.out to be executed by parent */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

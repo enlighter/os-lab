@@ -1,3 +1,5 @@
+/* Press Enter to continue!!! */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -64,6 +66,7 @@ int main(){
 
 	while(1){
 		char c;
+		printf("Press enter to continue:");
 		scanf("%c", &c);
 		n = -1;
 		do{
