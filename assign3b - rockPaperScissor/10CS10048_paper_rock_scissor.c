@@ -53,11 +53,11 @@ int master()		//host of the game
 	pidC = fork();		//fork child C
 	if(!pidC)			//C executing
 	{
+		printf("C is born! [%d]\n", getpid());
+
 		*cPID = getpid();
 
 		printf("cPID = %d\n", *cPID);
-
-		printf("C is born! [%d]\n", getpid());
 
 		close(fdc[0]); /* The child will not read and
 				     hence we close fdc[0] */
@@ -72,11 +72,11 @@ int master()		//host of the game
 		pidD = fork();		//fork child D
 		if(!pidD)			//D executing
 		{
+			printf("D is born! [%d]\n", getpid());
+
 			*dPID = getpid();
 
 			printf("dPID = %d\n", *dPID);
-
-			printf("D is born! [%d]\n", getpid());
 
 			close(fdd[0]); /* The child will not read and
 				     hence we close fdd[0] */
@@ -102,7 +102,7 @@ int master()		//host of the game
 
       		while (1)
       		{
-      			printf("C");
+      			printf("C Sleeping \n");
       			sleep(1);     /* Sleep until a signal is received from master */
       		}
 		}
@@ -116,13 +116,13 @@ int master()		//host of the game
 
       		while (1)
       		{
-      			printf("D");
+      			printf("D Sleeping \n");
       			sleep(1);     /* Sleep until a signal is received from master */
       		}
 		}
 		else			//P (master) executing
 		{
-			printf("cPID = %d, dPID = %d\n", *cPID, *dPID);
+			printf("Master : cPID = %d, dPID = %d\n", *cPID, *dPID);
 
 			while(*cPID == 0 || *dPID == 0)	//wait till children are created
 			{
