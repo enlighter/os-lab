@@ -44,6 +44,8 @@ int master()		//host of the game
 	cPID = mmap(NULL, sizeof *cPID, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);	//creating shared memory for parent-child processes with fork()
 	dPID = mmap(NULL, sizeof *dPID, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);	//creating shared memory for parent-child processes with fork()
 
+	printf("cPID = %d, dPID = %d\n", *cPID, *dPID);
+
 	pipe(fdc);
 	pipe(fdd);
 	printf("Master P: pipes created\n");
@@ -120,8 +122,9 @@ int master()		//host of the game
 		}
 		else			//P (master) executing
 		{
-
-			while(cPID == 0 && dPID == 0)	//wait till children are created
+			printf("cPID = %d, dPID = %d\n", *cPID, *dPID);
+			
+			while(cPID == 0 || dPID == 0)	//wait till children are created
 			{
 				printf("Waiting for children to be created...\n");
 			}
@@ -136,6 +139,7 @@ int master()		//host of the game
 				printf("------ Start of turn ------\n");
 
 				/* Dealing with C */
+				printf("Master: Sending ready signal to C\n");
 				kill(pidC, SIGCONT);	//send ready signal to C
 
 				printf("Master trying to read pipe from C\n");
