@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>	/* Include this file to use pipes */
 #include <time.h>	/* randomize using time */
+#include <sys/mman.h> /* header for shared memory creation */
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>	/* signaling between processes */
@@ -18,7 +19,7 @@
 
 int fdc[2], fdd[2];		//pipes for communicating with child c & d respectively
 char line[BUFSIZE];
-int cPID = 0, dPID = 0;	//for differentiatiing between the processes
+int *cPID = NULL, *dPID = NULL;	//for differentiatiing between the processes
 float cPoints = 0, dPoints = 0;	//game points for the two participants
 
 
@@ -40,6 +41,9 @@ int master()		//host of the game
 	int handC = 0, handD = 0;		//hands of the participants in one turn
 	int mediator = -100;			//determines the game status
 
+	cPID = mmap(NULL, sizeof *cPID, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);	//creating shared memory for parent-child processes with fork()
+	dPID = mmap(NULL, sizeof *dPID, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);	//creating shared memory for parent-child processes with fork()
+
 	pipe(fdc);
 	pipe(fdd);
 	printf("Master P: pipes created\n");
@@ -47,9 +51,9 @@ int master()		//host of the game
 	pidC = fork();		//fork child C
 	if(!pidC)			//C executing
 	{
-		cPID = getpid();
+		*cPID = getpid();
 
-		printf("cPID = %d\n", cPID);
+		printf("cPID = %d\n", *cPID);
 
 		printf("C is born! [%d]\n", getpid());
 
@@ -66,9 +70,9 @@ int master()		//host of the game
 		pidD = fork();		//fork child D
 		if(!pidD)			//D executing
 		{
-			dPID = getpid();
+			*dPID = getpid();
 
-			printf("dPID = %d\n", dPID);
+			printf("dPID = %d\n", *dPID);
 
 			printf("D is born! [%d]\n", getpid());
 
@@ -94,7 +98,11 @@ int master()		//host of the game
       		signal(SIGCONT, childSigHandler);           /* Register SIGCONT handler */
       		signal(SIGUSR1, childSigHandler);           /* Register SIGUSR1 handler */
 
-      		while (1) sleep(1);     /* Sleep until a signal is received from master */
+      		while (1)
+      		{
+      			printf("C");
+      			sleep(1);     /* Sleep until a signal is received from master */
+      		}
 		}
 		else if(!pidD)	//D executing
 		{
@@ -104,10 +112,19 @@ int master()		//host of the game
       		signal(SIGCONT, childSigHandler);           /* Register SIGCONT handler */
       		signal(SIGUSR1, childSigHandler);           /* Register SIGUSR1 handler */
 
-      		while (1) sleep(1);     /* Sleep until a signal is received from master */
+      		while (1)
+      		{
+      			printf("D");
+      			sleep(1);     /* Sleep until a signal is received from master */
+      		}
 		}
 		else			//P (master) executing
 		{
+
+			while(cPID == 0 && dPID == 0)	//wait till children are created
+			{
+				printf("Waiting for children to be created...\n");
+			}
 			
       		kill(pidC, SIGTSTP);        /* Send stop signal to C */
       		kill(pidD, SIGTSTP);        /* Send stop signal to D */
