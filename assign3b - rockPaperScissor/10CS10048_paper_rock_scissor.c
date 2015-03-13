@@ -18,6 +18,7 @@
 
 int fdc[2], fdd[2];		//pipes for communicating with child c & d respectively
 char line[BUFSIZE];
+int cPID = 0, dPID = 0;	//for differentiatiing between the processes
 float cPoints = 0, dPoints = 0;	//game points for the two participants
 
 
@@ -46,6 +47,10 @@ int master()		//host of the game
 	pidC = fork();		//fork child C
 	if(!pidC)			//C executing
 	{
+		cPID = getpid();
+
+		printf("cPID = %d\n", cPID);
+
 		printf("C is born! [%d]\n", getpid());
 
 		close(fdc[0]); /* The child will not read and
@@ -61,6 +66,10 @@ int master()		//host of the game
 		pidD = fork();		//fork child D
 		if(!pidD)			//D executing
 		{
+			dPID = getpid();
+
+			printf("dPID = %d\n", dPID);
+
 			printf("D is born! [%d]\n", getpid());
 
 			close(fdd[0]); /* The child will not read and
