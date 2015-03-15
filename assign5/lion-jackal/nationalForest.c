@@ -9,21 +9,53 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <pwd.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <errno.h>
+#include <string.h>
 /* UNIX based systems' include headers to implement UNIX
 standard semaphores	*/
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
 /*-----------------*/
+#include <sys/stat.h>
 #include <semaphore.h>
 
 #include "pit.h"	//Main include header for the whole lion-jackal problem
 
+static key_t semKey;
+
+int getKey(key_t *candidate, int nsems)
+{
+	int i = 0;
+
+	for(i = 1; i <= MAX_TRIES; i++)
+	{
+		if( (*candidate = semget((key_t) (i*10), nsems, IPC_CREAT | IPC_EXCL | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == (key_t)FAULT )
+		{
+			perror("Couldn't get semaphore: ");
+		}
+		else
+		{
+			printf("Semaphore set allocated = %d\n", (int) *candidate );
+			break;
+		}
+	}
+
+	if(*candidate == (key_t)FAULT )
+		return FAULT;
+	else
+		return SUCCESS;
+}
+
 int main()
 {
 	short isLion = 0, isJackal = 0, isRanger = 0;	//bool values for which process to run
-	int nJ = 0, nL = 0;		//no of. jackals and lions respectively
+	int nInstances =0;	//J = 0, nL = 0;		//no of. jackals and lions respectively
 	int choice = 0;		//user choice selection value
+	char *mode = NULL;	//current mode
 
 	printf("Welcome to the National Forest!!\n");
 
@@ -57,6 +89,52 @@ int main()
 			}
 		}
 	}
+
+	if( getKey(&semKey, NO_OF_PITS) == FAULT )	//get a semaphore array for required number of pits
+	{
+		printf("Unable to get semaphore, Exiting...\n");
+		return FAULT;
+	}
+
+	if(isLion)
+	{
+		mode = strdup("lion");
+	}
+	else if(isJackal)
+	{
+		mode = strdup("jackal");
+	}
+	else if(isRanger)
+	{
+		mode = strdup("ranger");
+	}
+
+	while(!isRanger)
+	{
+		printf("How many instances of %ss shall there be? :", mode);
+		scanf("%d", &nInstances);
+		if(nInstances > MAX_INSTANCES)
+		{
+			printf("Whoa! Not so many!! Let's be reasonable here and maybe select a number below 10?\n");
+		}
+		else if(nInstances <= 0)
+		{
+			printf("Cannot create %d no. of instances.\n", nInstances);
+		}
+		else
+			break;
+	}
+
+	/* Free all allocated variables that need to be explicitly freed */
+
+	free(mode);
+
+	if( semctl(semKey, 0, IPC_RMID, 0) == FAULT )
+	{
+		perror("Couldn't free semaphore: ");
+	}
+
+	/*-----Avoided memory leakage----------*/
 
 	return SUCCESS;
 }
