@@ -26,6 +26,8 @@ standard semaphores	*/
 #include "pit.h"	//Main include header for the whole lion-jackal problem
 
 static key_t semKey;
+int childPid = FAULT;		//stores pid of child process last forked
+static instanceID = 0;		//ID of the current process type
 
 int getKey(key_t *candidate, int nsems)
 {
@@ -53,7 +55,7 @@ int getKey(key_t *candidate, int nsems)
 int main()
 {
 	short isLion = 0, isJackal = 0, isRanger = 0;	//bool values for which process to run
-	int nInstances =0;	//J = 0, nL = 0;		//no of. jackals and lions respectively
+	int nInstances = 1;	//J = 0, nL = 0;		//no of. jackals and lions respectively
 	int choice = 0;		//user choice selection value
 	char *mode = NULL;	//current mode
 
@@ -147,5 +149,35 @@ int main()
 
 int instantiate(char* type, int instances)
 {
-	
+	for (instanceID = 1; instanceID <= instances && childPid != 0; ++instanceID)
+	/* Only the main process should go into the loop, all child processes should skip it */
+	{
+		if( (childPid = fork()) < 0)
+		{
+			perror("fork error: ");
+			return FAULT;
+		}
+	}
+
+	if(!childPid)
+	/* section to be executed by all child processes */
+	{
+		printf("Lion %d created! [pid:%d]", instanceID, getpid());
+
+		if( strcpm(type,"lion") == 0)
+		{
+			/* This is a lion instance */
+			be_a_lion();
+		}
+		else if( strcpm(type,"jackal") == 0)
+		{
+			/* This is a jackal instance */
+			be_a_jackal();
+		}
+		else if( strcpm(type,"ranger") == 0)
+		{
+			/* This is a ranger instance */
+			be_a_ranger();
+		}
+	}
 }
