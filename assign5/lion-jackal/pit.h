@@ -4,4 +4,6 @@
 #define	SUCCESS			0	/* return value of a function on successful execution */
 #define	PIT_CAPACITY	50	/* maximum pit capacity */
 #define NO_OF_PITS		3
+#define	MAX_TRIES		500
 
+int getKey(key_t *, int);	//get a free semaphore key

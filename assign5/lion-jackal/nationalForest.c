@@ -9,15 +9,45 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <pwd.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <errno.h>
 /* UNIX based systems' include headers to implement UNIX
 standard semaphores	*/
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
 /*-----------------*/
+#include <sys/stat.h>
 #include <semaphore.h>
 
 #include "pit.h"	//Main include header for the whole lion-jackal problem
+
+static key_t semKey;
+
+int getKey(key_t *candidate, int nsems)
+{
+	int i = 0;
+
+	for(i = 1; i <= MAX_TRIES; i++)
+	{
+		if( (*candidate = semget((key_t) (i*10), nsems, IPC_CREAT | IPC_EXCL | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == (key_t)FAULT )
+		{
+			perror("Couldn't get semaphore: ");
+		}
+		else
+		{
+			printf("Semaphore set allocated = %d", (int) *candidate );
+			break;
+		}
+	}
+
+	if(*candidate == (key_t)FAULT )
+		return FAULT;
+	else
+		return SUCCESS;
+}
 
 int main()
 {
@@ -56,6 +86,17 @@ int main()
 				choice = 0;
 			}
 		}
+	}
+
+	if( getKey(&semKey, NO_OF_PITS) == FAULT )	//get a semaphore array for required number of pits
+	{
+		printf("Unable to get semaphore, Exiting...\n");
+		return FAULT;
+	}
+
+	if( semctl(semKey, 0, IPC_RMID, 0) == FAULT )
+	{
+		perror("Couldn't free semaphore: ");
 	}
 
 	return SUCCESS;
