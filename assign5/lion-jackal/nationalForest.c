@@ -113,6 +113,7 @@ int main()
 	{
 		printf("How many instances of %ss shall there be? :", mode);
 		scanf("%d", &nInstances);
+
 		if(nInstances > MAX_INSTANCES)
 		{
 			printf("Whoa! Not so many!! Let's be reasonable here and maybe select a number below 10?\n");
@@ -123,6 +124,11 @@ int main()
 		}
 		else
 			break;
+	}
+
+	if( instantiate(mode, nInstances) == FAULT )
+	{
+		printf("Something went wrong while populating the forest.\n");
 	}
 
 	/* Free all allocated variables that need to be explicitly freed */
@@ -137,4 +143,9 @@ int main()
 	/*-----Avoided memory leakage----------*/
 
 	return SUCCESS;
+}
+
+int instantiate(char* type, int instances)
+{
+	
 }
