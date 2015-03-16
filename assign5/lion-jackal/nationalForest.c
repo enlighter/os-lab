@@ -4,14 +4,14 @@
 
 	Oh, and don't forget to include "pit.h"
 	how else are they gonna eat huh!!
+	...and also "ranger.c" , "lion.c" & "jackal.c"
 --------------------------------------------*/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <pwd.h>
-#include <fcntl.h>
-#include <limits.h>
+//#include <stdlib.h>
+//#include <stdio.h>
+//#include <unistd.h>
+#include <fcntl.h>	/* contains permissions flags */
+//#include <limits.h>
 #include <errno.h>
 #include <string.h>
 /* UNIX based systems' include headers to implement UNIX
@@ -20,13 +20,16 @@ standard semaphores	*/
 #include <sys/sem.h>
 #include <sys/types.h>
 /*-----------------*/
-#include <sys/stat.h>
-#include <semaphore.h>
+//#include <sys/stat.h>
+//#include <semaphore.h>
 
 #include "pit.h"	//Main include header for the whole lion-jackal problem
+#include "lion.c"	//contains be_a_lion()
+#include "jackal.c"	//contains be_a_jackal()
+#include "ranger.c"	//contains be_a_ranger()
 
 static key_t semKey;
-int childPid = FAULT;		//stores pid of child process last forked
+static int childPid = FAULT;		//stores pid of child process last forked
 static instanceID = 0;		//ID of the current process type
 
 int getKey(key_t *candidate, int nsems)
@@ -55,7 +58,7 @@ int getKey(key_t *candidate, int nsems)
 int main()
 {
 	short isLion = 0, isJackal = 0, isRanger = 0;	//bool values for which process to run
-	int nInstances = 1;	//J = 0, nL = 0;		//no of. jackals and lions respectively
+	int nInstances = 1;	/* no. of instances for each process type, only 1 instance of ranger type allowed */
 	int choice = 0;		//user choice selection value
 	char *mode = NULL;	//current mode
 
@@ -137,7 +140,7 @@ int main()
 
 	free(mode);
 
-	if( semctl(semKey, 0, IPC_RMID, 0) == FAULT )
+	if( semctl(semKey, 0, IPC_RMID, 0) == FAULT && childPid != 0)
 	{
 		perror("Couldn't free semaphore: ");
 	}
@@ -159,24 +162,28 @@ int instantiate(char* type, int instances)
 		}
 	}
 
+	--instanceID;
+
 	if(!childPid)
 	/* section to be executed by all child processes */
 	{
-		printf("Lion %d created! [pid:%d]", instanceID, getpid());
 
-		if( strcpm(type,"lion") == 0)
+		if( strcmp(type,"lion") == 0)
 		{
 			/* This is a lion instance */
+			printf("Lion %d created! [pid:%d]", instanceID, getpid());
 			be_a_lion();
 		}
-		else if( strcpm(type,"jackal") == 0)
+		else if( strcmp(type,"jackal") == 0)
 		{
 			/* This is a jackal instance */
+			printf("Jackal %d created! [pid:%d]", instanceID, getpid());
 			be_a_jackal();
 		}
-		else if( strcpm(type,"ranger") == 0)
+		else if( strcmp(type,"ranger") == 0)
 		{
 			/* This is a ranger instance */
+			printf("Ranger %d created! [pid:%d]", instanceID, getpid());
 			be_a_ranger();
 		}
 	}
