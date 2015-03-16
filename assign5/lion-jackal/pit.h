@@ -8,3 +8,7 @@
 #define MAX_INSTANCES	10	/* maximum no. of instances of a type to be spawned */
 
 int getKey(key_t *, int);	//get a free semaphore key
+int instantiate(char *, int);	//fork the necessary processes
+void be_a_lion();		//main method for a lion process
+void be_a_jackal();		//main method for a jackal process
+void be_a_ranger();		//main method for a ranger process
