@@ -9,7 +9,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-//#include <unistd.h>
+#include <unistd.h>
 #include <fcntl.h>	/* contains permissions flags */
 //#include <limits.h>
 #include <errno.h>
@@ -19,6 +19,7 @@ standard semaphores	*/
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 /*-----------------*/
 //#include <sys/stat.h>
 //#include <semaphore.h>
@@ -28,9 +29,9 @@ standard semaphores	*/
 #include "jackal.c"	//contains be_a_jackal()
 #include "ranger.c"	//contains be_a_ranger()
 
-static key_t semKey;
+static key_t *semKey;
 static int childPid = FAULT;		//stores pid of child process last forked
-static instanceID = 0;		//ID of the current process type
+static short instanceID = 0;		//ID of the current process type
 
 int getKey(key_t *candidate, int nsems)
 {
@@ -62,7 +63,10 @@ int main()
 	int choice = 0;		//user choice selection value
 	char *mode = NULL;	//current mode
 
-	printf("Welcome to the National Forest!!\n");
+	/* creating shared memory for parent-child processes with fork() */
+	semKey = mmap(NULL, sizeof *semKey, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+	printf("Welcome to the National Forest!! [%d]\n", getpid());
 
 	while(!choice)
 	{
@@ -89,13 +93,13 @@ int main()
 			}
 			default:
 			{
-				printf("Invalid choice, please enter a valid choice!\n");
+				printf("\nInvalid choice, please enter a valid choice!\n");
 				choice = 0;
 			}
 		}
 	}
 
-	if( getKey(&semKey, NO_OF_PITS) == FAULT )	//get a semaphore array for required number of pits
+	if( getKey(semKey, NO_OF_PITS) == FAULT )	//get a semaphore array for required number of pits
 	{
 		printf("Unable to get semaphore, Exiting...\n");
 		return FAULT;
@@ -140,7 +144,7 @@ int main()
 
 	free(mode);
 
-	if( semctl(semKey, 0, IPC_RMID, 0) == FAULT && childPid != 0)
+	if( semctl(*semKey, 0, IPC_RMID, 0) == FAULT && childPid != 0)
 	{
 		perror("Couldn't free semaphore: ");
 	}
@@ -152,38 +156,45 @@ int main()
 
 int instantiate(char* type, int instances)
 {
-	for (instanceID = 1; instanceID <= instances && childPid != 0; ++instanceID)
+	for (instanceID = 1; instanceID <= instances && childPid > 0; instanceID++)
 	/* Only the main process should go into the loop, all child processes should skip it */
 	{
+		printf("Creating child %d\n", instanceID);
+
 		if( (childPid = fork()) < 0)
 		{
 			perror("fork error: ");
 			return FAULT;
 		}
+
 	}
 
-	--instanceID;
-
-	if(!childPid)
+	if ( childPid > 0 )
+	/* section to be executed by the parent only */
+	{
+		--instanceID;
+	}
+	else
 	/* section to be executed by all child processes */
 	{
+		printf("%d:\n", getpid());
 
 		if( strcmp(type,"lion") == 0)
 		{
 			/* This is a lion instance */
-			printf("Lion %d created! [pid:%d]", instanceID, getpid());
+			printf("Lion %d created! [pid:%d]\n", instanceID, getpid());
 			be_a_lion();
 		}
 		else if( strcmp(type,"jackal") == 0)
 		{
 			/* This is a jackal instance */
-			printf("Jackal %d created! [pid:%d]", instanceID, getpid());
+			printf("Jackal %d created! [pid:%d]\n", instanceID, getpid());
 			be_a_jackal();
 		}
 		else if( strcmp(type,"ranger") == 0)
 		{
 			/* This is a ranger instance */
-			printf("Ranger %d created! [pid:%d]", instanceID, getpid());
+			printf("Ranger %d created! [pid:%d]\n", instanceID, getpid());
 			be_a_ranger();
 		}
 	}
