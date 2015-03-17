@@ -7,8 +7,8 @@
 	...and also "ranger.c" , "lion.c" & "jackal.c"
 --------------------------------------------*/
 
-//#include <stdlib.h>
-//#include <stdio.h>
+#include <stdlib.h>
+#include <stdio.h>
 //#include <unistd.h>
 #include <fcntl.h>	/* contains permissions flags */
 //#include <limits.h>
