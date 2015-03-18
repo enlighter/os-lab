@@ -14,12 +14,13 @@
 //#include <limits.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>	/* randomize using time */
 /* UNIX based systems' include headers to implement UNIX
 standard semaphores	*/
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
-#include <sys/mman.h>
+#include <sys/mman.h>	/* header for shared memory creation */
 /*-----------------*/
 //#include <sys/stat.h>
 //#include <semaphore.h>
@@ -196,19 +197,19 @@ int instantiate(char* type, int instances)
 		{
 			/* This is a lion instance */
 			printf("Lion %d created! [pid:%d]\n", instanceID, getpid());
-			be_a_lion();
+			be_a_lion(semKey);
 		}
 		else if( strcmp(type,"jackal") == 0)
 		{
 			/* This is a jackal instance */
 			printf("Jackal %d created! [pid:%d]\n", instanceID, getpid());
-			be_a_jackal();
+			be_a_jackal(semKey);
 		}
 		else if( strcmp(type,"ranger") == 0)
 		{
 			/* This is a ranger instance */
 			printf("Ranger %d created! [pid:%d]\n", instanceID, getpid());
-			be_a_ranger();
+			be_a_ranger(semKey);
 		}
 	}
 }
