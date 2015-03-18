@@ -4,14 +4,14 @@
 
 	Oh, and don't forget to include "pit.h"
 	how else are they gonna eat huh!!
-	...and also "ranger.c" , "lion.c" & "jackal.c"
 --------------------------------------------*/
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <fcntl.h>	/* contains permissions flags */
-//#include <limits.h>
+#include <pwd.h>
+#include <fcntl.h>
+#include <limits.h>
 #include <errno.h>
 #include <string.h>
 /* UNIX based systems' include headers to implement UNIX
@@ -19,19 +19,15 @@ standard semaphores	*/
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
-#include <sys/mman.h>
 /*-----------------*/
-//#include <sys/stat.h>
-//#include <semaphore.h>
+#include <sys/stat.h>
+#include <semaphore.h>
 
-#include "pit.h"	//Main include header for the whole lion-jackal problem
-#include "lion.c"	//contains be_a_lion()
-#include "jackal.c"	//contains be_a_jackal()
-#include "ranger.c"	//contains be_a_ranger()
+#include "barber.h"	//Main include header for the whole lion-jackal problem
 
-static key_t *semKey;
-static int childPid = FAULT;		//stores pid of child process last forked
-static short instanceID = 0;		//ID of the current process type
+static key_t semKey;
+int childPid = FAULT;		//stores pid of child process last forked
+static instanceID = 0;		//ID of the current process type
 
 int getKey(key_t *candidate, int nsems)
 {
@@ -59,14 +55,11 @@ int getKey(key_t *candidate, int nsems)
 int main()
 {
 	short isLion = 0, isJackal = 0, isRanger = 0;	//bool values for which process to run
-	int nInstances = 1;	/* no. of instances for each process type, only 1 instance of ranger type allowed */
+	int nInstances = 1;	//J = 0, nL = 0;		//no of. jackals and lions respectively
 	int choice = 0;		//user choice selection value
 	char *mode = NULL;	//current mode
 
-	/* creating shared memory for parent-child processes with fork() */
-	semKey = mmap(NULL, sizeof *semKey, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-
-	printf("Welcome to the National Forest!! [%d]\n", getpid());
+	printf("Welcome to the National Forest!!\n");
 
 	while(!choice)
 	{
@@ -93,13 +86,13 @@ int main()
 			}
 			default:
 			{
-				printf("\nInvalid choice, please enter a valid choice!\n");
+				printf("Invalid choice, please enter a valid choice!\n");
 				choice = 0;
 			}
 		}
 	}
 
-	if( getKey(semKey, NO_OF_PITS) == FAULT )	//get a semaphore array for required number of pits
+	if( getKey(&semKey, NO_OF_PITS) == FAULT )	//get a semaphore array for required number of pits
 	{
 		printf("Unable to get semaphore, Exiting...\n");
 		return FAULT;
@@ -144,13 +137,9 @@ int main()
 
 	free(mode);
 
-	if(childPid > 0)
-	/* to be executed only by the parent having children */
+	if( semctl(semKey, 0, IPC_RMID, 0) == FAULT )
 	{
-		if( semctl(*semKey, 0, IPC_RMID, 0) == FAULT)
-		{
-			perror("Couldn't free semaphore: ");
-		}
+		perror("Couldn't free semaphore: ");
 	}
 
 	/*-----Avoided memory leakage----------*/
@@ -160,54 +149,34 @@ int main()
 
 int instantiate(char* type, int instances)
 {
-	instanceID = 1;
-
-	while ( instanceID <= instances && childPid != 0)
+	for (instanceID = 1; instanceID <= instances && childPid != 0; ++instanceID)
 	/* Only the main process should go into the loop, all child processes should skip it */
 	{
-		printf("Creating child %d\n", instanceID);
-
 		if( (childPid = fork()) < 0)
 		{
 			perror("fork error: ");
 			return FAULT;
 		}
-
-		if(childPid > 0)	//to be executed only in parent
-		{
-			instanceID++;
-		}
-
 	}
 
-	if ( childPid > 0 )
-	/* section to be executed by the parent only */
-	{
-		//printf("instanceID = %d\n", instanceID);	//for debugging purposes
-		--instanceID;
-		//printf("instanceID = %d\n", instanceID);	//for debugging purposes
-	}
-	else
+	if(!childPid)
 	/* section to be executed by all child processes */
 	{
-		printf("%d:\n", getpid());
+		printf("Lion %d created! [pid:%d]", instanceID, getpid());
 
-		if( strcmp(type,"lion") == 0)
+		if( strcpm(type,"lion") == 0)
 		{
 			/* This is a lion instance */
-			printf("Lion %d created! [pid:%d]\n", instanceID, getpid());
 			be_a_lion();
 		}
-		else if( strcmp(type,"jackal") == 0)
+		else if( strcpm(type,"jackal") == 0)
 		{
 			/* This is a jackal instance */
-			printf("Jackal %d created! [pid:%d]\n", instanceID, getpid());
 			be_a_jackal();
 		}
-		else if( strcmp(type,"ranger") == 0)
+		else if( strcpm(type,"ranger") == 0)
 		{
 			/* This is a ranger instance */
-			printf("Ranger %d created! [pid:%d]\n", instanceID, getpid());
 			be_a_ranger();
 		}
 	}
