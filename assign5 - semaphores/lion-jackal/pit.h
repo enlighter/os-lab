@@ -1,4 +1,5 @@
 /* Main include header for the whole lion-jackal problem */
+#include <sys/types.h>	//for 'key_t'
 
 #define	FAULT 			-1	/* return value of a function on faulty execution */
 #define	SUCCESS			0	/* return value of a function on successful execution */
