@@ -75,6 +75,7 @@ int main()
 
 	printf("Welcome to the National Forest!! [%d]\n", getpid());
 
+	/* Take input of user choice */
 	while(!choice)
 	{
 		printf("1. Lion\n2. Jackal\n3. Ranger\n");
@@ -105,12 +106,15 @@ int main()
 			}
 		}
 	}
+	/*---------------------------*/
 
+	/* Request allocation of required semaphore set */
 	if( getKey(semKey, &semId) == FAULT )	//get a semaphore array for required number of pits
 	{
 		printf("Unable to get semaphore, Exiting...\n");
 		return FAULT;
 	}
+	/*---------------------------*/
 
 	if(isLion)
 	{
@@ -125,6 +129,8 @@ int main()
 		mode = strdup("ranger");
 	}
 
+	/* Tke user input about the no. of instances of process type */
+	/* Ranger only has 1 instance */
 	while(!isRanger)
 	{
 		printf("How many instances of %ss shall there be? :", mode);
@@ -141,19 +147,22 @@ int main()
 		else
 			break;
 	}
+	/*-----------------------------*/
 
+	/* Creating the instances */
 	if( instantiate(mode, nInstances) == FAULT )
 	{
 		printf("Something went wrong while populating the forest.\n");
 	}
+	/*-----------------------------*/
 
 	/* Free all allocated variables that need to be explicitly freed */
-
 	free(mode);
 
 	if(childPid > 0)
 	/* to be executed only by the parent having children */
 	{
+		/* Wait and capture the ending child processes */
 		for(i=1; i <= nInstances; i++)
 		{
 			wpid = wait(&status);
@@ -167,8 +176,6 @@ int main()
 		}
 
 	}
-
-
 	/*-----Avoided memory leakage----------*/
 
 	return SUCCESS;
