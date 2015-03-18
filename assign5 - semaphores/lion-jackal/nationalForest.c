@@ -150,17 +150,18 @@ int main()
 	if(childPid > 0)
 	/* to be executed only by the parent having children */
 	{
-		if( semctl(*semKey, 0, IPC_RMID, 0) == FAULT)
-		{
-			perror("Couldn't free semaphore: ");
-		}
-
-
 		for(i=1; i <= nInstances; i++)
 		{
 			wpid = wait(&status);
 			printf("-[%d] : %d\n", wpid, status);
 		}
+
+		/* remove allocated semaphore only after the child processes have ended */ 
+		if( semctl(*semKey, 0, IPC_RMID, 0) == FAULT)
+		{
+			perror("Couldn't free semaphore: ");
+		}
+
 	}
 
 
