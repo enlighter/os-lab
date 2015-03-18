@@ -34,27 +34,30 @@ static key_t *semKey;
 static int childPid = FAULT;		//stores pid of child process last forked
 static short instanceID = 0;		//ID of the current process type
 
-int getKey(key_t *candidate, int nsems)
+int getKey(key_t *candidate, int *semid)
 {
 	int i = 0;
 
 	for(i = 1; i <= MAX_TRIES; i++)
 	{
-		if( (*candidate = semget((key_t) (i*10), nsems, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == (key_t)FAULT )
+		if( (*semid = semget((key_t) (i*10), NO_OF_PITS, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == FAULT )
 		{
 			perror("Couldn't get semaphore: ");
+			return FAULT;
 		}
 		else
 		{
-			printf("Semaphore set allocated = %d\n", (int) *candidate );
-			break;
+			*candidate = (key_t) (i*10);
+			printf("Semaphore set allocated = %d, key = %d\n", *semid, (int) *candidate );
+			return SUCCESS;
 		}
 	}
 
-	if(*candidate == (key_t)FAULT )
+	/*if(*semid == FAULT )
 		return FAULT;
 	else
 		return SUCCESS;
+	*/
 }
 
 int main()
@@ -62,6 +65,7 @@ int main()
 	short isLion = 0, isJackal = 0, isRanger = 0;	//bool values for which process to run
 	int nInstances = 1;	/* no. of instances for each process type, only 1 instance of ranger type allowed */
 	int choice = 0;		//user choice selection value
+	int semId = 0;	//to store the semaphore set id
 	char *mode = NULL;	//current mode
 	int wpid = 0, status = 0;	//to capture the pid of an ending child
 	int i = 0;
@@ -102,7 +106,7 @@ int main()
 		}
 	}
 
-	if( getKey(semKey, NO_OF_PITS) == FAULT )	//get a semaphore array for required number of pits
+	if( getKey(semKey, &semId) == FAULT )	//get a semaphore array for required number of pits
 	{
 		printf("Unable to get semaphore, Exiting...\n");
 		return FAULT;
@@ -157,7 +161,7 @@ int main()
 		}
 
 		/* remove allocated semaphore only after the child processes have ended */ 
-		if( semctl(*semKey, 0, IPC_RMID, 0) == FAULT)
+		if( semctl(semId, 0, IPC_RMID, 0) == FAULT)
 		{
 			perror("Couldn't free semaphore: ");
 		}

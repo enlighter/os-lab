@@ -8,7 +8,7 @@
 #define	MAX_TRIES		500
 #define MAX_INSTANCES	10	/* maximum no. of instances of a type to be spawned */
 
-int getKey(key_t *, int);	//get a free semaphore key
+int getKey(key_t *, int *);	//get a free semaphore key
 int instantiate(char *, int);	//fork the necessary processes
 int be_a_lion(key_t *);		//main method for a lion process
 int be_a_jackal(key_t *);		//main method for a jackal process

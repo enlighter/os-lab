@@ -13,18 +13,26 @@ standard semaphores	*/
 /*-----------------*/
 #include "pit.h"
 
+//extern short instanceID;	/* instanceID defined in nationalForest.c */
+
 int be_a_ranger(key_t *sKey)		//main method for a ranger process
 {
 	double result = FAULT;	//choose the pit to fill
+	int semid = 0;	//to store the semaphore set id
 	int pitChoice = FAULT;
 	int range = NO_OF_PITS;	//for range of random values
 	float factor = ((float) RAND_MAX + 1) / range;
 	//int i=0;
 
-	if( getKey(sKey, NO_OF_PITS) == FAULT )	//get the semaphore for pits
+	if( ( semid = semget(*sKey, NO_OF_PITS, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == FAULT )
+	/* get the semaphore id for pits using the key to the pits */
 	{
-		printf("Unable to get semaphore, Exiting...\n");
+		perror("semget : ");
 		return FAULT;
+	}
+	else
+	{
+		printf("Ranger : Semaphore set got = %d, key = %d\n", semid, (int) *sKey );
 	}
 
 	srand((unsigned int)time(NULL));	//see randomization with current time each time
