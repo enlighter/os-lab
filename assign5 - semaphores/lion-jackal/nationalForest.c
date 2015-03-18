@@ -63,6 +63,8 @@ int main()
 	int nInstances = 1;	/* no. of instances for each process type, only 1 instance of ranger type allowed */
 	int choice = 0;		//user choice selection value
 	char *mode = NULL;	//current mode
+	int wpid = 0, status = 0;	//to capture the pid of an ending child
+	int i = 0;
 
 	/* creating shared memory for parent-child processes with fork() */
 	semKey = mmap(NULL, sizeof *semKey, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -152,7 +154,15 @@ int main()
 		{
 			perror("Couldn't free semaphore: ");
 		}
+
+
+		for(i=1; i <= nInstances; i++)
+		{
+			wpid = wait(&status);
+			printf("-[%d] : %d\n", wpid, status);
+		}
 	}
+
 
 	/*-----Avoided memory leakage----------*/
 
