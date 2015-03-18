@@ -40,7 +40,7 @@ int getKey(key_t *candidate, int nsems)
 
 	for(i = 1; i <= MAX_TRIES; i++)
 	{
-		if( (*candidate = semget((key_t) (i*10), nsems, IPC_CREAT | IPC_EXCL | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == (key_t)FAULT )
+		if( (*candidate = semget((key_t) (i*10), nsems, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == (key_t)FAULT )
 		{
 			perror("Couldn't get semaphore: ");
 		}
