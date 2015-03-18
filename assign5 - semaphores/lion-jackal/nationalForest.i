@@ -3844,31 +3844,69 @@ extern int shm_unlink (const char *__name);
 
 
 # 1 "pit.h" 1
-# 10 "pit.h"
-int getKey(key_t *, int);
+# 11 "pit.h"
+int getKey(key_t *, int *);
 int instantiate(char *, int);
-void be_a_lion(key_t *);
-void be_a_jackal(key_t *);
-void be_a_ranger(key_t *);
+int be_a_lion(key_t *);
+int be_a_jackal(key_t *);
+int be_a_ranger(key_t *);
+extern inline int printPitStatus(int);
 # 29 "nationalForest.c" 2
 # 1 "lion.c" 1
 # 15 "lion.c"
-void be_a_lion(key_t *sKey)
+int be_a_lion(key_t *sKey)
 {
 
 }
 # 30 "nationalForest.c" 2
 # 1 "jackal.c" 1
 # 15 "jackal.c"
-void be_a_jackal(key_t *sKey)
+int be_a_jackal(key_t *sKey)
 {
 
 }
 # 31 "nationalForest.c" 2
 # 1 "ranger.c" 1
-# 15 "ranger.c"
-void be_a_ranger(key_t *sKey)
+# 14 "ranger.c"
+# 1 "pit.h" 1
+# 11 "pit.h"
+int getKey(key_t *, int *);
+int instantiate(char *, int);
+int be_a_lion(key_t *);
+int be_a_jackal(key_t *);
+int be_a_ranger(key_t *);
+extern inline int printPitStatus(int);
+# 15 "ranger.c" 2
+
+
+
+int be_a_ranger(key_t *sKey)
 {
+ double result = -1;
+ int semid = 0;
+ int pitChoice = -1;
+ int range = 3;
+ float factor = ((float) 2147483647 + 1) / range;
+
+
+ if( ( semid = semget(*sKey, 3, 01000 | 0400 | 0200 | (0400 >> 3) | (0200 >> 3) | ((0400 >> 3) >> 3) | ((0200 >> 3) >> 3)) ) == -1 )
+
+ {
+  perror("semget : ");
+  return -1;
+ }
+ else
+ {
+  printf("Ranger : Semaphore set got = %d, key = %d\n", semid, (int) *sKey );
+ }
+
+ srand((unsigned int)time(((void *)0)));
+
+ result = rand()/ factor;
+    pitChoice = (int)(result * 100.0);
+    pitChoice = (pitChoice % 3) + 1;
+
+    printf("Ranger requesting control over meat pit %d\n", pitChoice);
 
 }
 # 32 "nationalForest.c" 2
@@ -3877,27 +3915,47 @@ static key_t *semKey;
 static int childPid = -1;
 static short instanceID = 0;
 
-int getKey(key_t *candidate, int nsems)
+inline int printPitStatus(int semid)
+{
+ int i = 0;
+
+ for(i = 0; i < 3; i++)
+ {
+  if( semctl(semid, i, 16, 0) == -1)
+
+  {
+   perror("Semctl(SETVAL) : ");
+   return -1;
+  }
+
+  printf("Pit %d has %d meat\n", i, semctl(semid, i, 12, 0) );
+ }
+}
+
+int getKey(key_t *candidate, int *semid)
 {
  int i = 0;
 
  for(i = 1; i <= 500; i++)
  {
-  if( (*candidate = semget((key_t) (i*10), nsems, 01000 | 02000 | 0400 | 0200 | (0400 >> 3) | (0200 >> 3) | ((0400 >> 3) >> 3) | ((0200 >> 3) >> 3)) ) == (key_t)-1 )
+  if( (*semid = semget((key_t) (i*10), 3, 01000 | 0400 | 0200 | (0400 >> 3) | (0200 >> 3) | ((0400 >> 3) >> 3) | ((0200 >> 3) >> 3)) ) == -1 )
   {
    perror("Couldn't get semaphore: ");
+   return -1;
   }
   else
   {
-   printf("Semaphore set allocated = %d\n", (int) *candidate );
-   break;
+   *candidate = (key_t) (i*10);
+   printf("Semaphore set allocated = %d, key = %d\n", *semid, (int) *candidate );
+   return 0;
   }
  }
 
- if(*candidate == (key_t)-1 )
-  return -1;
- else
-  return 0;
+
+
+
+
+
 }
 
 int main()
@@ -3905,12 +3963,16 @@ int main()
  short isLion = 0, isJackal = 0, isRanger = 0;
  int nInstances = 1;
  int choice = 0;
+ int semID = 0;
  char *mode = ((void *)0);
+ int wpid = 0, status = 0;
+ int i = 0;
 
 
  semKey = mmap(((void *)0), sizeof *semKey, 0x1 | 0x2, 0x01 | 0x20, -1, 0);
 
  printf("Welcome to the National Forest!! [%d]\n", getpid());
+
 
  while(!choice)
  {
@@ -3943,11 +4005,14 @@ int main()
   }
  }
 
- if( getKey(semKey, 3) == -1 )
+
+
+ if( getKey(semKey, &semID) == -1 )
  {
   printf("Unable to get semaphore, Exiting...\n");
   return -1;
  }
+
 
  if(isLion)
  {
@@ -3961,6 +4026,17 @@ int main()
  {
   mode = strdup("ranger");
  }
+
+ printf("\n");
+
+ if( printPitStatus(semID) == -1 )
+ {
+  return -1;
+ }
+
+ printf("\n");
+
+
 
  while(!isRanger)
  {
@@ -3979,6 +4055,8 @@ int main()
    break;
  }
 
+
+
  if( instantiate(mode, nInstances) == -1 )
  {
   printf("Something went wrong while populating the forest.\n");
@@ -3991,12 +4069,20 @@ int main()
  if(childPid > 0)
 
  {
-  if( semctl(*semKey, 0, 0, 0) == -1)
+
+  for(i=1; i <= nInstances; i++)
+  {
+   wpid = wait(&status);
+   printf("-[%d] : %d\n", wpid, status);
+  }
+
+
+  if( semctl(semID, 0, 0, 0) == -1)
   {
    perror("Couldn't free semaphore: ");
   }
- }
 
+ }
 
 
  return 0;
@@ -4040,19 +4126,21 @@ int instantiate(char* type, int instances)
   {
 
    printf("Lion %d created! [pid:%d]\n", instanceID, getpid());
-   be_a_lion(semKey);
+   return be_a_lion(semKey);
   }
   else if( strcmp(type,"jackal") == 0)
   {
 
    printf("Jackal %d created! [pid:%d]\n", instanceID, getpid());
-   be_a_jackal(semKey);
+   return be_a_jackal(semKey);
   }
   else if( strcmp(type,"ranger") == 0)
   {
 
    printf("Ranger %d created! [pid:%d]\n", instanceID, getpid());
-   be_a_ranger(semKey);
+   return be_a_ranger(semKey);
   }
  }
+
+ return 0;
 }
