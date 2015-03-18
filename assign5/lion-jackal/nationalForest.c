@@ -156,7 +156,9 @@ int main()
 
 int instantiate(char* type, int instances)
 {
-	for (instanceID = 1; instanceID <= instances && childPid > 0; instanceID++)
+	instanceID = 1;
+
+	while ( instanceID <= instances && childPid != 0)
 	/* Only the main process should go into the loop, all child processes should skip it */
 	{
 		printf("Creating child %d\n", instanceID);
@@ -167,12 +169,19 @@ int instantiate(char* type, int instances)
 			return FAULT;
 		}
 
+		if(childPid > 0)	//to be executed only in parent
+		{
+			instanceID++;
+		}
+
 	}
 
 	if ( childPid > 0 )
 	/* section to be executed by the parent only */
 	{
+		//printf("instanceID = %d\n", instanceID);	//for debugging purposes
 		--instanceID;
+		//printf("instanceID = %d\n", instanceID);	//for debugging purposes
 	}
 	else
 	/* section to be executed by all child processes */
