@@ -15,10 +15,18 @@ standard semaphores	*/
 
 void be_a_ranger(key_t *sKey)		//main method for a ranger process
 {
-	int pitChoice = FAULT;	//choose the pit to fill
+	double result = FAULT;	//choose the pit to fill
+	int pitChoice = FAULT;
+	int range = NO_OF_PITS;	//for range of random values
+	float factor = ((float) RAND_MAX + 1) / range;
+	//int i=0;
 
 	srand((unsigned int)time(NULL));	//see randomization with current time each time
-    pitChoice = (rand() % NO_OF_PITS) + 1;	/* choose randomly amongst the pit choices (1 - NO_OF_PITS) */
+	//for(i=0;i<=10;i++){	//for testing
+	result = rand()/ factor; //% NO_OF_PITS) + 1;	/* choose randomly amongst the pit choices (1 - NO_OF_PITS) */
+    pitChoice = (int)(result * 100.0);
+    pitChoice = (pitChoice % NO_OF_PITS) + 1;
 
     printf("Ranger requesting control over meat pit %d\n", pitChoice);
+	//}
 }
