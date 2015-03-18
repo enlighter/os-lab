@@ -12,7 +12,7 @@ standard semaphores	*/
 #include <sys/mman.h>
 /*-----------------*/
 
-void be_a_jackal(key_t *sKey)		//main method for a jackal process
+int be_a_jackal(key_t *sKey)		//main method for a jackal process
 {
 	
 }

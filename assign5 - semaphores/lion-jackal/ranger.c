@@ -13,13 +13,19 @@ standard semaphores	*/
 /*-----------------*/
 #include "pit.h"
 
-void be_a_ranger(key_t *sKey)		//main method for a ranger process
+int be_a_ranger(key_t *sKey)		//main method for a ranger process
 {
 	double result = FAULT;	//choose the pit to fill
 	int pitChoice = FAULT;
 	int range = NO_OF_PITS;	//for range of random values
 	float factor = ((float) RAND_MAX + 1) / range;
 	//int i=0;
+
+	if( getKey(sKey, NO_OF_PITS) == FAULT )	//get the semaphore for pits
+	{
+		printf("Unable to get semaphore, Exiting...\n");
+		return FAULT;
+	}
 
 	srand((unsigned int)time(NULL));	//see randomization with current time each time
 	//for(i=0;i<=10;i++){	//for testing

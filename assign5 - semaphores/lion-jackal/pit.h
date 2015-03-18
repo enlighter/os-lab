@@ -10,6 +10,6 @@
 
 int getKey(key_t *, int);	//get a free semaphore key
 int instantiate(char *, int);	//fork the necessary processes
-void be_a_lion(key_t *);		//main method for a lion process
-void be_a_jackal(key_t *);		//main method for a jackal process
-void be_a_ranger(key_t *);		//main method for a ranger process
+int be_a_lion(key_t *);		//main method for a lion process
+int be_a_jackal(key_t *);		//main method for a jackal process
+int be_a_ranger(key_t *);		//main method for a ranger process

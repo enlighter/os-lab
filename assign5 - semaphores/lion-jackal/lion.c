@@ -12,7 +12,7 @@ standard semaphores	*/
 #include <sys/mman.h>
 /*-----------------*/
 
-void be_a_lion(key_t *sKey)		//main method for a lion process
+int be_a_lion(key_t *sKey)		//main method for a lion process
 {
 	
 }
