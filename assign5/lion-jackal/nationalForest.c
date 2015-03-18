@@ -144,9 +144,13 @@ int main()
 
 	free(mode);
 
-	if( semctl(*semKey, 0, IPC_RMID, 0) == FAULT && childPid != 0)
+	if(childPid > 0)
+	/* to be executed only by the parent having children */
 	{
-		perror("Couldn't free semaphore: ");
+		if( semctl(*semKey, 0, IPC_RMID, 0) == FAULT)
+		{
+			perror("Couldn't free semaphore: ");
+		}
 	}
 
 	/*-----Avoided memory leakage----------*/
