@@ -10,11 +10,12 @@
 the other for actual food value 
 0  1  2  3  4  5
 W  F  W  F  W  F
-The even (2*i) semaphores are for access control for (i+1)th pit
+The even (2*i) semaphores are for access control (mutex) for (i+1)th pit
 The odd (2*i + 1) semphores are the meat values for (i+1)th pit*/
 #define SEMAPHORE_SIZE	NO_OF_PITS*2
 #define	MAX_TRIES		500
 #define MAX_INSTANCES	10	/* maximum no. of instances of a type to be spawned */
+#define EXECUTION_TIME	1	/* total amount to time to run the forest */
 
 typedef struct sembuf sBuf;
 
@@ -26,6 +27,10 @@ int instantiate(char *, int);	//fork the necessary processes
 int be_a_lion(key_t *);		//main method for a lion process
 int be_a_jackal(key_t *);		//main method for a jackal process
 int be_a_ranger(key_t *);		//main method for a ranger process
+int randomlyChoosePit();	//Generate random number to choose a pit
 int printPitStatus(int);	//semctl(GETVAL)
+
+void signalHandler(int);	//To handle manual termination of process
+
 extern inline int getPitValue(int, int);	//get the meat value of a particular pit
 extern inline int getStatusValue(int, int);	//get the status value of a particular pit
