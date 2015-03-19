@@ -22,7 +22,7 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 	int pitChoice = FAULT;
 	int range = NO_OF_PITS;	//for range of random values
 	float factor = ((float) RAND_MAX + 1) / range;
-	int i=0, meat = FAULT;
+	int i=0, j=0, meat = FAULT, status = FAULT;
 	
 	if( ( semid = semget(*sKey, SEMAPHORE_SIZE, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == FAULT )
 	/* get the semaphore id for pits using the key to the pits */
@@ -99,10 +99,38 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 				/* SIGNAL (After critical section) */
 				waitNSignal.sem_op = 1;
 				waitNSignal.sem_flg = 0;
-				if( semop( semid, &waitNSignal, 1) == FAULT)
+
+				/* Send signal to waiting queues of all 3 pits */
+				for( j = 1; j <= NO_OF_PITS; j++)
 				{
-					perror("semop(signal) : ");
+					//printf("status of pit %d = %d\n", pitChoice + 1, getStatusValue( semid, pitChoice ) );
+
+					status = getStatusValue( semid, pitChoice );
+
+					if( status == FAULT)
+					{
+						printf("Sorry, the forest in on fire. Exiting...\n");
+						return FAULT;
+					}
+					else if( status < 1 )
+					/* Signal the wait queue of a pit only of the current status < 1
+					otherwise the status will accumulate to a value > 1 */
+					{
+						if( semop( semid, &waitNSignal, 1) == FAULT)
+						{
+							perror("semop(signal) : ");
+						}
+					}
+
+					//printf("status of pit %d = %d\n", pitChoice + 1, getStatusValue( semid, pitChoice ) );
+
+					pitChoice = (pitChoice + 1) % NO_OF_PITS;
+					waitNSignal.sem_num = 2*pitChoice;
 				}
+
+				/* for testing purposes *
+				printPitStatus(semid);
+				/*========================*/
 
 				break;
 			}
@@ -113,6 +141,7 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 		if(i == NO_OF_PITS - 1)
 		/* Check if the last iteration is coming up */
 		{
+			printf("Setting semaphore flag as 0\n");
 			waitNSignal.sem_flg = 0;
 			/* Wait on the last pit if all NO_OF_PITS pits are busy */
 		}

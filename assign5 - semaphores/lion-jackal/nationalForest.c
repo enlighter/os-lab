@@ -36,7 +36,7 @@ static short instanceID = 0;		//ID of the current process type
 
 int printPitStatus(int semid)
 {
-	int i = 0, meat = FAULT;
+	int i = 0, meat = FAULT, status = FAULT;
 
 	printf("\n");
 	for(i = 0; i < NO_OF_PITS; i++)
@@ -47,7 +47,13 @@ int printPitStatus(int semid)
 			return FAULT;
 		}
 
-		printf("Pit %d has %d meat\n", i+1, meat );
+		if( (status = semctl(semid, 2*i , GETVAL, 0)) == FAULT )
+		{
+			perror("Semctl(GETVAL) : ");
+			return FAULT;
+		}
+
+		printf("Pit %d has %d meat with status %d\n", i+1, meat, status);
 	}
 	printf("\n");
 
@@ -62,6 +68,16 @@ inline int getPitValue(int semid, int pit)	//get the meat value of pit "pit" wit
 		perror("Semctl(GETVAL) : ");
 
 	return meat;
+}
+
+inline int getStatusValue(int semid, int pit)	//get the status value of pit "pit" within semid
+{
+	int status = FAULT;
+
+	if( (status = semctl(semid, 2*pit , GETVAL, 0)) == FAULT )
+		perror("Semctl(GETVAL) : ");
+
+	return status;
 }
 
 int getKey(key_t *candidate, int *semid)

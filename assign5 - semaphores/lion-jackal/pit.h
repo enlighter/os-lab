@@ -28,3 +28,4 @@ int be_a_jackal(key_t *);		//main method for a jackal process
 int be_a_ranger(key_t *);		//main method for a ranger process
 int printPitStatus(int);	//semctl(GETVAL)
 extern inline int getPitValue(int, int);	//get the meat value of a particular pit
+extern inline int getStatusValue(int, int);	//get the status value of a particular pit
