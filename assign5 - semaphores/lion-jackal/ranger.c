@@ -54,8 +54,8 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
     pitChoice = pitChoice % NO_OF_PITS;
 
     /* FOR TESTING PURPOSES *
-    if( semctl(semid, 2*pitChoice + 1 , SETVAL, 44) == FAULT)
-	// making pit[pitChoice]'s access values to 0
+    if( semctl(semid, 2*pitChoice , SETVAL, 0) == FAULT)
+	// making pit[pitChoice]'s access value to 0
 	{
 		perror("Semctl(SETVAL) : ");
 		return FAULT;
@@ -75,17 +75,19 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 		if( semop( semid, &waitNSignal, 1) == FAULT)
 		{
 			perror("semop(wait) : ");
+			printf("Ranger denied access over meat pit %d\n", pitChoice + 1);
 		}
 		/*-----------------------------*/
 		else if( meat < 0 || meat > PIT_CAPACITY - FILL_VALUE )
 		{
-			printf("Meat not within limits, moving on...\n");
+			printf("Meat not within limits in pit %d, moving on...\n", pitChoice + 1);
 		}
 		else
 		{
 		/* Will enter critical section only when semop() above returns SUCCESS 
 			and meat value is within limits */
 			/* CRITICAL SECTION !! */
+			printf("Ranger in control of meat pit %d\n", pitChoice + 1);
 			food.sem_num = 2 * pitChoice + 1;
 			if( semop( semid, &food, 1) == FAULT)
 			{
@@ -141,7 +143,7 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 		if(i == NO_OF_PITS - 1)
 		/* Check if the last iteration is coming up */
 		{
-			printf("Setting semaphore flag as 0\n");
+			//printf("Setting semaphore flag as 0\n");
 			waitNSignal.sem_flg = 0;
 			/* Wait on the last pit if all NO_OF_PITS pits are busy */
 		}
