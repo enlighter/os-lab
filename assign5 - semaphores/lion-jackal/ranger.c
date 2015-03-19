@@ -22,7 +22,7 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 	int pitChoice = FAULT;
 	int range = NO_OF_PITS;	//for range of random values
 	float factor = ((float) RAND_MAX + 1) / range;
-	int i=0;
+	int i=0, meat = FAULT;
 	
 	if( ( semid = semget(*sKey, SEMAPHORE_SIZE, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == FAULT )
 	/* get the semaphore id for pits using the key to the pits */
@@ -42,7 +42,7 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 	no waiting here */
 
 	/* Default values for food */
-	food.sem_op = 10;
+	food.sem_op = FILL_VALUE;
 	food.sem_flg = 0;
 	/* If blocked, then process will be blocked,
 	otherwise will continue */
@@ -54,7 +54,7 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
     pitChoice = pitChoice % NO_OF_PITS;
 
     /* FOR TESTING PURPOSES *
-    if( semctl(semid, 2*pitChoice , SETVAL, 0) == FAULT)
+    if( semctl(semid, 2*pitChoice + 1 , SETVAL, 44) == FAULT)
 	// making pit[pitChoice]'s access values to 0
 	{
 		perror("Semctl(SETVAL) : ");
@@ -67,6 +67,8 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
     {
 
     	printf("Ranger requesting control over meat pit %d\n", pitChoice + 1);
+
+    	meat = getPitValue(semid, pitChoice);
 	
 		/* REQUESTING CRITICAL SECTION (WAIT) */
 		waitNSignal.sem_num = 2 * pitChoice;
@@ -75,9 +77,14 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 			perror("semop(wait) : ");
 		}
 		/*-----------------------------*/
+		else if( meat < 0 || meat > PIT_CAPACITY - FILL_VALUE )
+		{
+			printf("Meat not within limits, moving on...\n");
+		}
 		else
 		{
-		/* Will enter critical section only when semop() above returns SUCCESS */
+		/* Will enter critical section only when semop() above returns SUCCESS 
+			and meat value is within limits */
 			/* CRITICAL SECTION !! */
 			food.sem_num = 2 * pitChoice + 1;
 			if( semop( semid, &food, 1) == FAULT)

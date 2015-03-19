@@ -4,6 +4,7 @@
 #define	FAULT 			-1	/* return value of a function on faulty execution */
 #define	SUCCESS			0	/* return value of a function on successful execution */
 #define	PIT_CAPACITY	50	/* maximum pit capacity */
+#define FILL_VALUE		10	/* the amount deposited by ranger in 1 go */
 #define NO_OF_PITS		3
 /* We have to have 2 semaphores for each pit, one for controlling access and
 the other for actual food value 
@@ -26,3 +27,4 @@ int be_a_lion(key_t *);		//main method for a lion process
 int be_a_jackal(key_t *);		//main method for a jackal process
 int be_a_ranger(key_t *);		//main method for a ranger process
 int printPitStatus(int);	//semctl(GETVAL)
+extern inline int getPitValue(int, int);	//get the meat value of a particular pit

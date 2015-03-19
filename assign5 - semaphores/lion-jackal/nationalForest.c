@@ -54,6 +54,16 @@ int printPitStatus(int semid)
 	return SUCCESS;
 }
 
+inline int getPitValue(int semid, int pit)	//get the meat value of pit "pit" withim semid
+{
+	int meat = FAULT;
+
+	if( (meat = semctl(semid, 2*pit + 1 , GETVAL, 0)) == FAULT )
+		perror("Semctl(GETVAL) : ");
+
+	return meat;
+}
+
 int getKey(key_t *candidate, int *semid)
 {
 	int i = 0;
