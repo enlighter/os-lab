@@ -1,183 +1,253 @@
-/* Welcome to the National Forest in Enlighter World!!
-	Here you'll find lions and jackals
-	and their caretaker, the Ranger!
+/* Solving sleeping barber problem using Semaphore
+ * Compile with:
+ *  	gcc barber.c
+------------------------------------------------*/
 
-	Oh, and don't forget to include "pit.h"
-	how else are they gonna eat huh!!
---------------------------------------------*/
-
-#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <pwd.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <errno.h>
-#include <string.h>
-/* UNIX based systems' include headers to implement UNIX
-standard semaphores	*/
+#include <stdlib.h>
 #include <sys/ipc.h>
+#include <sys/shm.h>
 #include <sys/sem.h>
-#include <sys/types.h>
-/*-----------------*/
-#include <sys/stat.h>
-#include <semaphore.h>
+#include <signal.h>
 
-#include "barber.h"	//Main include header for the whole lion-jackal problem
+#include "barber.h"	
 
-static key_t semKey;
-int childPid = FAULT;		//stores pid of child process last forked
-static instanceID = 0;		//ID of the current process type
+// Flag to stop the barber thread when all customers have been serviced.
+ int allDone=0; 
 
-int getKey(key_t *candidate, int nsems)
-{
-	int i = 0;
+ int semid;
 
-	for(i = 1; i <= MAX_TRIES; i++)
-	{
-		if( (*candidate = semget((key_t) (i*10), nsems, IPC_CREAT | IPC_EXCL | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == (key_t)FAULT )
-		{
-			perror("Couldn't get semaphore: ");
-		}
-		else
-		{
-			printf("Semaphore set allocated = %d\n", (int) *candidate );
-			break;
-		}
-	}
+ int ipcinit(int nsems,int vals[])
+ {
+ 	void *a;
+ 	int i;
 
-	if(*candidate == (key_t)FAULT )
-		return FAULT;
-	else
-		return SUCCESS;
-}
+ 	if ((semid=semget(IPC_PRIVATE,nsems,PERMS|IPC_CREAT))<0) {
+ 		perror("semget\n");
+ 		return(1);
+ 	}
 
-int main()
-{
-	short isLion = 0, isJackal = 0, isRanger = 0;	//bool values for which process to run
-	int nInstances = 1;	//J = 0, nL = 0;		//no of. jackals and lions respectively
-	int choice = 0;		//user choice selection value
-	char *mode = NULL;	//current mode
+ 	for (i=0; i<nsems; i++) {
+ 		if (semctl(semid,i,SETVAL,vals[i])<0) {
+ 			perror("setval:semctl\n");
+ 			return(1);
+ 		}
+ 	}
 
-	printf("Welcome to the National Forest!!\n");
+ 	return(0);
+ }
 
-	while(!choice)
-	{
-		printf("1. Lion\n2. Jackal\n3. Ranger\n");
-		printf("Please choose which process would you like to run currently ? :");
-		scanf("%d", &choice);
+ int ipcend()
+ {
+ 	int sts=0;
 
-		switch(choice)
-		{
-			case 1:
-			{
-				isLion = 1;
-				break;
-			}
-			case 2:
-			{
-				isJackal = 1;
-				break;
-			}
-			case 3:
-			{
-				isRanger = 1;
-				break;
-			}
-			default:
-			{
-				printf("Invalid choice, please enter a valid choice!\n");
-				choice = 0;
-			}
-		}
-	}
+ 	if (semctl(semid,0,IPC_RMID)) {
+ 		perror("semctl");
+ 		sts=1;
+ 	}
+ 	return(sts);
+ }
 
-	if( getKey(&semKey, NO_OF_PITS) == FAULT )	//get a semaphore array for required number of pits
-	{
-		printf("Unable to get semaphore, Exiting...\n");
-		return FAULT;
-	}
+ int sempost(int snum)
+ {
+ 	struct sembuf sop;
 
-	if(isLion)
-	{
-		mode = strdup("lion");
-	}
-	else if(isJackal)
-	{
-		mode = strdup("jackal");
-	}
-	else if(isRanger)
-	{
-		mode = strdup("ranger");
-	}
+ 	sop.sem_num=snum;
+ 	sop.sem_op=1;
+ 	sop.sem_flg=0;
+ 	if (semop(semid,&sop,1)) {
+ 		perror("post:semop");
+ 		printf("-sempost err [%d]: %d\n",snum,semctl(semid,snum,GETVAL,0));
+ 		return(-1);
+ 	}
+ 	printf("-sempost [%d]: %d\n",snum,semctl(semid,snum,GETVAL,0));
+ 	return(0);
+ }
 
-	while(!isRanger)
-	{
-		printf("How many instances of %ss shall there be? :", mode);
-		scanf("%d", &nInstances);
+ int semwait(int snum)
+ {
+ 	struct sembuf sop;
+ 	
+ 	sop.sem_num=snum;
+ 	sop.sem_op=-1;
+ 	sop.sem_flg=IPC_NOWAIT;
+ 	if (semop(semid,&sop,1)) {
+ 		perror("wait:semop");
+ 		printf("+semwait err [%d]: %d\n",snum,semctl(semid,snum,GETVAL,0));
+ 		return(-1);
+ 	}
+ 	printf("+semwait [%d]: %d\n",snum,semctl(semid,snum,GETVAL,0));
+ 	return(0);
+ }
 
-		if(nInstances > MAX_INSTANCES)
-		{
-			printf("Whoa! Not so many!! Let's be reasonable here and maybe select a number below 10?\n");
-		}
-		else if(nInstances <= 0)
-		{
-			printf("Cannot create %d no. of instances.\n", nInstances);
-		}
-		else
-			break;
-	}
+ void randwait(int secs) 
+ {
+ 	int len;
+    // Generate a random number...
+ 	len = (int) ((drand48() * secs) + 1);
+ 	sleep(len);
+ }
 
-	if( instantiate(mode, nInstances) == FAULT )
-	{
-		printf("Something went wrong while populating the forest.\n");
-	}
+ void customer(int num) 
+ {
+ 	printf("Customer %d is going to the barber's shop.\n", num);
+    // Take some random amount of time
+ 	randwait(5);
 
-	/* Free all allocated variables that need to be explicitly freed */
+ 	printf("Customer %d arrived at barber shop.\n", num);
+    // Wait for space in the waiting room...
+ 	semwait(WAITINGROOM);
+ 	
+ 	printf("Customer %d entering waiting room.\n", num);
+    // Wait for the barber chair 
+ 	semwait(BARBERCHAIR);
 
-	free(mode);
+    // The chair is free so give up space in the waiting room.
+ 	sempost(WAITINGROOM);
 
-	if( semctl(semKey, 0, IPC_RMID, 0) == FAULT )
-	{
-		perror("Couldn't free semaphore: ");
-	}
+    // Wake up the barber...
+ 	printf("Customer %d waking the barber.\n", num);
+ 	sempost(BARBERPILLOW);
 
-	/*-----Avoided memory leakage----------*/
+    // Wait for the barber to cut hair.
+ 	semwait(SEATBELT);
 
-	return SUCCESS;
-}
+    // Give up the chair.
+ 	sempost(BARBERCHAIR);
 
-int instantiate(char* type, int instances)
-{
-	for (instanceID = 1; instanceID <= instances && childPid != 0; ++instanceID)
-	/* Only the main process should go into the loop, all child processes should skip it */
-	{
-		if( (childPid = fork()) < 0)
-		{
-			perror("fork error: ");
-			return FAULT;
-		}
-	}
+ 	printf("Customer %d leaving barber shop.\n", num);
+ 	exit(0);
+ }
 
-	if(!childPid)
-	/* section to be executed by all child processes */
-	{
-		printf("Lion %d created! [pid:%d]", instanceID, getpid());
+ void theend(int s)
+ {
+ 	allDone=1;
+ }
 
-		if( strcpm(type,"lion") == 0)
-		{
-			/* This is a lion instance */
-			be_a_lion();
-		}
-		else if( strcpm(type,"jackal") == 0)
-		{
-			/* This is a jackal instance */
-			be_a_jackal();
-		}
-		else if( strcpm(type,"ranger") == 0)
-		{
-			/* This is a ranger instance */
-			be_a_ranger();
-		}
-	}
-}
+ void barber() 
+ {
+ 	while (allDone==0) {
+  // Sleep until customer arrives
+ 		printf("Barber is sleeping\n");
+ 		semwait(BARBERPILLOW);
+
+ 		if (allDone==0) {
+ 			printf("Barber is cutting hair\n");
+
+      // Take a random amount of time 
+ 			randwait(3);
+ 			printf("Barber has finished cutting hair.\n");
+
+      // Release the customer 
+ 			sempost(SEATBELT);
+ 		}
+ 		else {
+ 			printf("Barber is going home.\n");
+ 		}
+ 	}
+ 	exit(0);
+ }
+
+ int startbarber()
+ { 
+ 	int pid;
+
+ 	pid=fork();
+ 	switch(pid) {
+ 		case 0:
+      // Child
+ 		if (signal(SIGUSR1,theend)<0) {
+ 			perror("signal");
+ 		}
+ 		barber();
+ 		case -1:
+ 		perror("fork");
+ 		return(-1);
+ 		default:
+      // Parent
+ 		return(pid);
+ 	}
+ }
+
+ int startcustomer(int i)
+ {
+ 	int pid;
+
+ 	pid=fork();
+ 	switch(pid) {
+ 		case 0:
+      // Child
+ 		customer(i);
+ 		case -1:
+ 		perror("fork");
+ 		return(-1);
+ 		default:
+      // Parent
+ 		return(pid);
+ 	}
+ }
+
+
+ int main(int argc, char *argv[]) 
+ {
+ 	int i, numCustomers, numChairs;
+ 	pid_t pid[MAX_CUSTOMERS],bpid;
+ 	int initvalues[NSEMS];
+
+ 	printf("\nEnter no. of Customers : ");
+ 	scanf("%d",&numCustomers);
+ 	printf("\nEnter no. of waiting chairs : ");
+ 	scanf("%d",&numChairs);
+
+ 	if (numCustomers > MAX_CUSTOMERS) {
+ 		printf("The maximum number of Customers allowed is %d.\n", MAX_CUSTOMERS);
+ 		exit(-1);
+ 	}
+    // Initialize random number generator
+ 	srand48((long)getpid());
+
+
+    // Setup initial values for semaphores 
+ 	initvalues[WAITINGROOM]=numChairs;
+ 	initvalues[BARBERCHAIR]=1;
+ 	initvalues[BARBERPILLOW]=0;
+ 	initvalues[SEATBELT]=0;
+
+    // Create IPCs
+ 	if (ipcinit(NSEMS,initvalues)) {
+ 		exit(1);
+ 	}
+
+    // Create the barber process
+ 	bpid=startbarber();
+
+    // Create the customer processes.
+ 	for (i=0; i<numCustomers; i++) {
+ 		printf("starting customers\n");
+ 		pid[i]=startcustomer(i);
+ 	}
+
+    // Wait for customer processes to finish
+ 	for (i=0; i<numCustomers; i++) {
+ 		if (waitpid(pid[i],NULL,NULL)<0) {
+ 			perror("waitpid");
+ 		}
+ 	}
+
+    // Stop the barber thread.
+
+    // Wake the barber (if sleeping)
+ 	sempost(BARBERPILLOW); 
+ 	if (kill(bpid,SIGUSR1)<0) {
+ 		perror("kill");
+ 	} 
+
+ 	if (waitpid(bpid,NULL,NULL)<0) {
+ 		perror("waitpid");
+ 	}
+
+    // Remove IPCs
+ 	ipcend();
+ 	exit(0);
+ }

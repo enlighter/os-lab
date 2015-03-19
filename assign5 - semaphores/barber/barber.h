@@ -1,14 +1,24 @@
-/* Main include header for the whole lion-jackal problem */
+// The maximum number of customers
+#define MAX_CUSTOMERS 25
 
-#define	FAULT 			-1	/* return value of a function on faulty execution */
-#define	SUCCESS			0	/* return value of a function on successful execution */
-#define	PIT_CAPACITY	50	/* maximum pit capacity */
-#define NO_OF_PITS		3
-#define	MAX_TRIES		500
-#define MAX_INSTANCES	10	/* maximum no. of instances of a type to be spawned */
+// Define # of semaphores.
+#define NSEMS 4
 
-int getKey(key_t *, int);	//get a free semaphore key
-int instantiate(char *, int);	//fork the necessary processes
-void be_a_lion();		//main method for a lion process
-void be_a_jackal();		//main method for a jackal process
-void be_a_ranger();		//main method for a ranger process
+// waitingRoom Limits the # of customers allowed
+// to enter the waiting room at one time.
+#define WAITINGROOM 0
+
+// barberChair ensures mutually exclusive access to
+// the barber chair.
+#define BARBERCHAIR 1
+
+// barberPillow is used to allow the barber to sleep
+// until a customer arrives.
+#define BARBERPILLOW 2
+
+// seatBelt is used to make the customer to wait until
+// the barber is done cutting his/her hair.
+#define SEATBELT 3
+
+//Shared Memory
+#define PERMS   0600
