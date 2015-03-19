@@ -117,7 +117,7 @@ void customer(int num)
 	}
 	else{
 	// Seating at waiting chairs
-		printf("Customer %d entering waiting room.\n", num);
+		printf("Customer %d seating in waiting chair.\n", num);
 		if(semuse(WAITINGCHAIR)==-1){
 			printf("Customer %d leaving barber shop WITHOUT hair cut.\n", num);
 			semleave(MUTEX);
@@ -150,13 +150,14 @@ void theend(int s)
 
 void barber() 
 {
+	printf("Barber opens the shop and is sleeping.\n");
 	while (allDone==0) {
 	// Sleep until customer arrives
 	//	printf("Barber is sleeping\n");
 	//	semuse(BARBERPILLOW);
 
 		if (semctl(semid,BARBER,GETVAL,0) == 0) {
-			printf("Barber is cutting hair\n");
+			printf("Barber is cutting hair.\n");
 
 			// Take a random amount of time 
 			randwait(3);
@@ -218,25 +219,27 @@ int main(int argc, char *argv[])
 	pid_t pid[MAX_CUSTOMERS],bpid;
 	int initvalues[NSEMS];
 
-	printf("\nEnter no. of Customers : ");
+	printf("Enter no. of Customers : ");
 	scanf("%d",&numCustomers);
-	printf("\nEnter no. of waiting chairs : ");
+	printf("Enter no. of waiting chairs : ");
 	scanf("%d",&numChairs);
 
 	if (numCustomers > MAX_CUSTOMERS) {
 		printf("The maximum number of Customers allowed is %d.\n", MAX_CUSTOMERS);
 		exit(-1);
 	}
-		// Initialize random number generator
+
+	printf("----------------------------------------------------\n");
+	// Initialize random number generator
+
 	srand48((long)getpid());
 
-
-		// Setup initial values for semaphores 
+	// Setup initial values for semaphores 
 	initvalues[WAITINGCHAIR]=numChairs;
 	initvalues[BARBER]=1;
 	initvalues[MUTEX]=1;
 
-		// Create IPCs
+	// Create IPCs
 	if (ipcinit(NSEMS,initvalues)) {
 		exit(1);
 	}
@@ -245,13 +248,13 @@ int main(int argc, char *argv[])
 	bpid=startbarber();
 
 		// Create the customer processes.
-	for (i=0; i<numCustomers; i++) {
+	for (i=1; i<=numCustomers; i++) {
 		//printf("starting customers\n");
 		pid[i]=startcustomer(i);
 	}
 
 		// Wait for customer processes to finish
-	for (i=0; i<numCustomers; i++) {
+	for (i=1; i<=numCustomers; i++) {
 		if (waitpid(pid[i],NULL,NULL)<0) {
 			perror("waitpid");
 		}
@@ -265,7 +268,8 @@ int main(int argc, char *argv[])
 		perror("kill");
 	}
 	else{
-		printf("Barber is done for the day!");
+		printf("----------------------------------------------------\n");
+		printf("Barber is done for the day!\n");
 	} 
 
 	if (waitpid(bpid,NULL,NULL)<0) {
