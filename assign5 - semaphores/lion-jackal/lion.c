@@ -11,6 +11,7 @@ standard semaphores	*/
 #include <sys/types.h>
 #include <sys/mman.h>
 /*-----------------*/
+#include "pit.h"
 
 int be_a_lion(key_t *sKey)		//main method for a lion process
 {

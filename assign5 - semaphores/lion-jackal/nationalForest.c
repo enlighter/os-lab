@@ -41,13 +41,13 @@ int printPitStatus(int semid)
 	printf("\n");
 	for(i = 0; i < NO_OF_PITS; i++)
 	{
-		if( (meat = semctl(semid, i, GETVAL, 0)) == FAULT )
+		if( (meat = semctl(semid, 2*i + 1 , GETVAL, 0)) == FAULT )
 		{
 			perror("Semctl(GETVAL) : ");
 			return FAULT;
 		}
 
-		printf("Pit %d has %d meat\n", i,  );
+		printf("Pit %d has %d meat\n", i+1, meat );
 	}
 	printf("\n");
 
@@ -60,7 +60,9 @@ int getKey(key_t *candidate, int *semid)
 
 	for(i = 1; i <= MAX_TRIES; i++)
 	{
-		if( (*semid = semget((key_t) (i*10), NO_OF_PITS, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == FAULT )
+		/* We have to have 2 semaphores for each pit, one for controlling access and
+		the other for actual food value */
+		if( (*semid = semget((key_t) (i*10), SEMAPHORE_SIZE, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == FAULT )
 		{
 			perror("Couldn't get semaphore: ");
 			return FAULT;
@@ -152,8 +154,15 @@ int main()
 	/* Initiate the semaphore set */
 	for(i = 0; i < NO_OF_PITS; i++)
 	{
-		if( semctl(semID, i, SETVAL, 0) == FAULT)
-		/* Initializing all pits to 0 meat */
+		if( semctl(semID, 2*i , SETVAL, 1) == FAULT)
+		/* Initializing all pits' access values to 1 */
+		{
+			perror("Semctl(SETVAL) : ");
+			return FAULT;
+		}
+
+		if( semctl(semID, 2*i + 1, SETVAL, 0) == FAULT)
+		/* Initializing all pits' meat values to 0 meat */
 		{
 			perror("Semctl(SETVAL) : ");
 			return FAULT;

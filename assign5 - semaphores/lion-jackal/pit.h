@@ -5,8 +5,20 @@
 #define	SUCCESS			0	/* return value of a function on successful execution */
 #define	PIT_CAPACITY	50	/* maximum pit capacity */
 #define NO_OF_PITS		3
+/* We have to have 2 semaphores for each pit, one for controlling access and
+the other for actual food value 
+0  1  2  3  4  5
+W  F  W  F  W  F
+The even (2*i) semaphores are for access control for (i+1)th pit
+The odd (2*i + 1) semphores are the meat values for (i+1)th pit*/
+#define SEMAPHORE_SIZE	NO_OF_PITS*2
 #define	MAX_TRIES		500
 #define MAX_INSTANCES	10	/* maximum no. of instances of a type to be spawned */
+
+typedef struct sembuf sBuf;
+
+sBuf food;	//sembuf variable to refill pit with food
+sBuf waitNSignal;	//sembuf variable to request and leave pit access
 
 int getKey(key_t *, int *);	//get a free semaphore key
 int instantiate(char *, int);	//fork the necessary processes
