@@ -34,21 +34,24 @@ static key_t *semKey;
 static int childPid = FAULT;		//stores pid of child process last forked
 static short instanceID = 0;		//ID of the current process type
 
-inline int printPitStatus(int semid)
+int printPitStatus(int semid)
 {
-	int i = 0;
+	int i = 0, meat = FAULT;
 
+	printf("\n");
 	for(i = 0; i < NO_OF_PITS; i++)
 	{
-		if( semctl(semid, i, SETVAL, 0) == FAULT)
-		/* Initializing all pits to 0 meat */
+		if( (meat = semctl(semid, i, GETVAL, 0)) == FAULT )
 		{
-			perror("Semctl(SETVAL) : ");
+			perror("Semctl(GETVAL) : ");
 			return FAULT;
 		}
 
-		printf("Pit %d has %d meat\n", i, semctl(semid, i, GETVAL, 0) );
+		printf("Pit %d has %d meat\n", i,  );
 	}
+	printf("\n");
+
+	return SUCCESS;
 }
 
 int getKey(key_t *candidate, int *semid)
@@ -146,14 +149,22 @@ int main()
 		mode = strdup("ranger");
 	}
 
-	printf("\n");
 	/* Initiate the semaphore set */
+	for(i = 0; i < NO_OF_PITS; i++)
+	{
+		if( semctl(semID, i, SETVAL, 0) == FAULT)
+		/* Initializing all pits to 0 meat */
+		{
+			perror("Semctl(SETVAL) : ");
+			return FAULT;
+		}
+	}
+
 	if( printPitStatus(semID) == FAULT )
 	{
 		return FAULT;
 	}
 	/*---------------------------*/
-	printf("\n");
 
 	/* Tke user input about the no. of instances of process type */
 	/* Ranger only has 1 instance */

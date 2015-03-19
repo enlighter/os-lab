@@ -13,4 +13,4 @@ int instantiate(char *, int);	//fork the necessary processes
 int be_a_lion(key_t *);		//main method for a lion process
 int be_a_jackal(key_t *);		//main method for a jackal process
 int be_a_ranger(key_t *);		//main method for a ranger process
-extern inline int printPitStatus(int);	//semctl(GETVAL)
+int printPitStatus(int);	//semctl(GETVAL)

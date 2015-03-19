@@ -3850,7 +3850,7 @@ int instantiate(char *, int);
 int be_a_lion(key_t *);
 int be_a_jackal(key_t *);
 int be_a_ranger(key_t *);
-extern inline int printPitStatus(int);
+int printPitStatus(int);
 # 29 "nationalForest.c" 2
 # 1 "lion.c" 1
 # 15 "lion.c"
@@ -3875,7 +3875,7 @@ int instantiate(char *, int);
 int be_a_lion(key_t *);
 int be_a_jackal(key_t *);
 int be_a_ranger(key_t *);
-extern inline int printPitStatus(int);
+int printPitStatus(int);
 # 15 "ranger.c" 2
 
 
@@ -3915,21 +3915,24 @@ static key_t *semKey;
 static int childPid = -1;
 static short instanceID = 0;
 
-inline int printPitStatus(int semid)
+int printPitStatus(int semid)
 {
- int i = 0;
+ int i = 0, meat = -1;
 
+ printf("\n");
  for(i = 0; i < 3; i++)
  {
-  if( semctl(semid, i, 16, 0) == -1)
-
+  if( (meat = semctl(semid, i, 12, 0)) == -1 )
   {
-   perror("Semctl(SETVAL) : ");
+   perror("Semctl(GETVAL) : ");
    return -1;
   }
 
-  printf("Pit %d has %d meat\n", i, semctl(semid, i, 12, 0) );
+  printf("Pit %d has %d meat\n", i, );
  }
+ printf("\n");
+
+ return 0;
 }
 
 int getKey(key_t *candidate, int *semid)
@@ -4027,14 +4030,22 @@ int main()
   mode = strdup("ranger");
  }
 
- printf("\n");
+
+ for(i = 0; i < 3; i++)
+ {
+  if( semctl(semID, i, 16, 0) == -1)
+
+  {
+   perror("Semctl(SETVAL) : ");
+   return -1;
+  }
+ }
 
  if( printPitStatus(semID) == -1 )
  {
   return -1;
  }
 
- printf("\n");
 
 
 
