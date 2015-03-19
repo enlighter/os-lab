@@ -24,6 +24,7 @@ standard semaphores	*/
 /*-----------------*/
 //#include <sys/stat.h>
 //#include <semaphore.h>
+#include <signal.h>		/* header file for signal handling */
 
 #include "pit.h"	//Main include header for the whole lion-jackal problem
 #include "lion.c"	//contains be_a_lion()
@@ -141,6 +142,8 @@ int main()
 
 	/* creating shared memory for parent-child processes with fork() */
 	semKey = mmap(NULL, sizeof *semKey, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+	sigset(SIGINT, signalHandler);
 
 	printf("Welcome to the National Forest!! [%d]\n", getpid());
 
@@ -277,6 +280,7 @@ int main()
 int instantiate(char* type, int instances)
 {
 	instanceID = 1;
+	//clock_t start,end;
 
 	while ( instanceID <= instances && childPid != 0)
 	/* Only the main process should go into the loop, all child processes should skip it */
@@ -324,9 +328,18 @@ int instantiate(char* type, int instances)
 		{
 			/* This is a ranger instance */
 			printf("Ranger %d created! [pid:%d]\n", instanceID, getpid());
-			return be_a_ranger(semKey);
+
+			while(!SUCCESS)
+			{
+				if( be_a_ranger(semKey) == FAULT)
+					return FAULT;
+			}
 		}
 	}
 
 	return SUCCESS;
+}
+
+void signalHandler(int signr){
+    printf("SIGINT system interrupt invoked [%d] ...\n", getpid());
 }
