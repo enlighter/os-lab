@@ -3,13 +3,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <time.h>	/* randomize using time */
+//#include <time.h>	/* randomize using time */
 /* UNIX based systems' include headers to implement UNIX
 standard semaphores	*/
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
-#include <sys/mman.h>
+//#include <sys/mman.h>
 /*-----------------*/
 #include "pit.h"
 
@@ -17,11 +17,10 @@ standard semaphores	*/
 
 int be_a_ranger(key_t *sKey)		//main method for a ranger process
 {
-	double result = FAULT;	//choose the pit to fill
+	
 	int semid = 0;	//to store the semaphore set id
 	int pitChoice = FAULT;
-	int range = NO_OF_PITS;	//for range of random values
-	float factor = ((float) RAND_MAX + 1) / range;
+	
 	int i=0, j=0, meat = FAULT, status = FAULT;
 	
 	if( ( semid = semget(*sKey, SEMAPHORE_SIZE, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == FAULT )
@@ -47,11 +46,7 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 	/* If blocked, then process will be blocked,
 	otherwise will continue */
 
-	srand((unsigned int)time(NULL));	//see randomization with current time each time
-	//for(i=0;i<=10;i++){	//for testing
-	result = rand()/ factor; //% NO_OF_PITS) + 1;	/* choose randomly amongst the pit choices (1 - NO_OF_PITS) */
-    pitChoice = (int)(result * 100.0);
-    pitChoice = pitChoice % NO_OF_PITS;
+	pitChoice = randomlyChoosePit();
 
     /* FOR TESTING PURPOSES *
     if( semctl(semid, 2*pitChoice , SETVAL, 0) == FAULT)

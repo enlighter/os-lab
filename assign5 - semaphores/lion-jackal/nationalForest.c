@@ -108,6 +108,27 @@ int getKey(key_t *candidate, int *semid)
 	*/
 }
 
+int randomlyChoosePit()	//Generate random number to choose a pit
+{
+	double result = FAULT;	//choose the pit
+	float factor = ((float) RAND_MAX + 1) / NO_OF_PITS;
+	int choice = FAULT;
+	int i=0;
+
+	srand((unsigned int)time(NULL));	//seed randomization with current time each time
+
+	for(i = 0; i < 10; i++){
+	result = rand()/ factor;
+    choice = (int)(result * 100.0);
+    
+    //printf("choice = %d\n", choice);
+    choice = choice % NO_OF_PITS;
+    //printf("choice = %d\n", choice);
+	}
+
+    return choice;
+}
+
 int main()
 {
 	short isLion = 0, isJackal = 0, isRanger = 0;	//bool values for which process to run
