@@ -22,7 +22,7 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 	int pitChoice = FAULT;
 	int range = NO_OF_PITS;	//for range of random values
 	float factor = ((float) RAND_MAX + 1) / range;
-	//int i=0;
+	int i=0;
 	
 	if( ( semid = semget(*sKey, SEMAPHORE_SIZE, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == FAULT )
 	/* get the semaphore id for pits using the key to the pits */
@@ -37,11 +37,15 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 
 	/* Default values for waitNSignal */
 	waitNSignal.sem_op = -1;
-	waitNSignal.sem_flg = SEM_UNDO;
+	waitNSignal.sem_flg = IPC_NOWAIT ;
+	/* If unable to get access then it will try for the next pit,
+	no waiting here */
 
 	/* Default values for food */
 	food.sem_op = 10;
 	food.sem_flg = 0;
+	/* If blocked, then process will be blocked,
+	otherwise will continue */
 
 	srand((unsigned int)time(NULL));	//see randomization with current time each time
 	//for(i=0;i<=10;i++){	//for testing
@@ -49,25 +53,65 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
     pitChoice = (int)(result * 100.0);
     pitChoice = pitChoice % NO_OF_PITS;
 
-    printf("Ranger requesting control over meat pit %d\n", pitChoice + 1);
-	
-	/* REQUESTING CRITICAL SECTION */
-	waitNSignal.sem_num = 2 * pitChoice;
-	if( semop( semid, &waitNSignal, 1) == FAULT)
+    /* FOR TESTING PURPOSES *
+    if( semctl(semid, 2*pitChoice , SETVAL, 0) == FAULT)
+	// making pit[pitChoice]'s access values to 0
 	{
-		perror("semop(waitNSignal) : ");
+		perror("Semctl(SETVAL) : ");
 		return FAULT;
 	}
-	/*-----------------------------*/
+    /*=======================*/
 
-	/* CRITICAL SECTION !! */
-	food.sem_num = 2 * pitChoice + 1;
-	if( semop( semid, &food, 1) == FAULT)
-	{
-		perror("semop(food) : ");
-		return FAULT;
+    i = 0;
+    while(i < NO_OF_PITS)
+    {
+
+    	printf("Ranger requesting control over meat pit %d\n", pitChoice + 1);
+	
+		/* REQUESTING CRITICAL SECTION (WAIT) */
+		waitNSignal.sem_num = 2 * pitChoice;
+		if( semop( semid, &waitNSignal, 1) == FAULT)
+		{
+			perror("semop(wait) : ");
+		}
+		/*-----------------------------*/
+		else
+		{
+		/* Will enter critical section only when semop() above returns SUCCESS */
+			/* CRITICAL SECTION !! */
+			food.sem_num = 2 * pitChoice + 1;
+			if( semop( semid, &food, 1) == FAULT)
+			{
+				perror("semop(food) : ");
+				return FAULT;
+			}
+			/*-----------------------------*/
+			else
+			{
+				
+				/* SIGNAL (After critical section) */
+				waitNSignal.sem_op = 1;
+				waitNSignal.sem_flg = 0;
+				if( semop( semid, &waitNSignal, 1) == FAULT)
+				{
+					perror("semop(signal) : ");
+				}
+
+				break;
+			}
+		}
+
+		i++;	/* if unable to enter critical section, move on and try next pit */
+
+		if(i == NO_OF_PITS - 1)
+		/* Check if the last iteration is coming up */
+		{
+			waitNSignal.sem_flg = 0;
+			/* Wait on the last pit if all NO_OF_PITS pits are busy */
+		}
+
+		pitChoice = (pitChoice + 1) % NO_OF_PITS;
 	}
-	/*-----------------------------*/
 
 	/* For debugging purposes */
 	if( printPitStatus(semid) == FAULT)
