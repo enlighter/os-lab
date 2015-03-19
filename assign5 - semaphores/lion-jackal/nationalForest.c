@@ -24,6 +24,7 @@ standard semaphores	*/
 /*-----------------*/
 //#include <sys/stat.h>
 //#include <semaphore.h>
+#include <signal.h>		/* header file for signal handling */
 
 #include "pit.h"	//Main include header for the whole lion-jackal problem
 #include "lion.c"	//contains be_a_lion()
@@ -36,7 +37,7 @@ static short instanceID = 0;		//ID of the current process type
 
 int printPitStatus(int semid)
 {
-	int i = 0, meat = FAULT;
+	int i = 0, meat = FAULT, status = FAULT;
 
 	printf("\n");
 	for(i = 0; i < NO_OF_PITS; i++)
@@ -47,7 +48,13 @@ int printPitStatus(int semid)
 			return FAULT;
 		}
 
-		printf("Pit %d has %d meat\n", i+1, meat );
+		if( (status = semctl(semid, 2*i , GETVAL, 0)) == FAULT )
+		{
+			perror("Semctl(GETVAL) : ");
+			return FAULT;
+		}
+
+		printf("Pit %d has %d meat with status %d\n", i+1, meat, status);
 	}
 	printf("\n");
 
@@ -62,6 +69,16 @@ inline int getPitValue(int semid, int pit)	//get the meat value of pit "pit" wit
 		perror("Semctl(GETVAL) : ");
 
 	return meat;
+}
+
+inline int getStatusValue(int semid, int pit)	//get the status value of pit "pit" within semid
+{
+	int status = FAULT;
+
+	if( (status = semctl(semid, 2*pit , GETVAL, 0)) == FAULT )
+		perror("Semctl(GETVAL) : ");
+
+	return status;
 }
 
 int getKey(key_t *candidate, int *semid)
@@ -92,6 +109,27 @@ int getKey(key_t *candidate, int *semid)
 	*/
 }
 
+int randomlyChoosePit()	//Generate random number to choose a pit
+{
+	double result = FAULT;	//choose the pit
+	float factor = ((float) RAND_MAX + 1) / NO_OF_PITS;
+	int choice = FAULT;
+	int i=0;
+
+	srand((unsigned int)time(NULL));	//seed randomization with current time each time
+
+	for(i = 0; i < 10; i++){
+	result = rand()/ factor;
+    choice = (int)(result * 100.0);
+    
+    //printf("choice = %d\n", choice);
+    choice = choice % NO_OF_PITS;
+    //printf("choice = %d\n", choice);
+	}
+
+    return choice;
+}
+
 int main()
 {
 	short isLion = 0, isJackal = 0, isRanger = 0;	//bool values for which process to run
@@ -104,6 +142,8 @@ int main()
 
 	/* creating shared memory for parent-child processes with fork() */
 	semKey = mmap(NULL, sizeof *semKey, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+	sigset(SIGINT, signalHandler);
 
 	printf("Welcome to the National Forest!! [%d]\n", getpid());
 
@@ -240,6 +280,7 @@ int main()
 int instantiate(char* type, int instances)
 {
 	instanceID = 1;
+	//clock_t start,end;
 
 	while ( instanceID <= instances && childPid != 0)
 	/* Only the main process should go into the loop, all child processes should skip it */
@@ -287,9 +328,18 @@ int instantiate(char* type, int instances)
 		{
 			/* This is a ranger instance */
 			printf("Ranger %d created! [pid:%d]\n", instanceID, getpid());
-			return be_a_ranger(semKey);
+
+			while(!SUCCESS)
+			{
+				if( be_a_ranger(semKey) == FAULT)
+					return FAULT;
+			}
 		}
 	}
 
 	return SUCCESS;
+}
+
+void signalHandler(int signr){
+    printf("SIGINT system interrupt invoked [%d] ...\n", getpid());
 }

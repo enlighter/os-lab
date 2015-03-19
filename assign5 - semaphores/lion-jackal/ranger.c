@@ -3,13 +3,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <time.h>	/* randomize using time */
+//#include <time.h>	/* randomize using time */
 /* UNIX based systems' include headers to implement UNIX
 standard semaphores	*/
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
-#include <sys/mman.h>
+//#include <sys/mman.h>
 /*-----------------*/
 #include "pit.h"
 
@@ -17,12 +17,11 @@ standard semaphores	*/
 
 int be_a_ranger(key_t *sKey)		//main method for a ranger process
 {
-	double result = FAULT;	//choose the pit to fill
+	
 	int semid = 0;	//to store the semaphore set id
 	int pitChoice = FAULT;
-	int range = NO_OF_PITS;	//for range of random values
-	float factor = ((float) RAND_MAX + 1) / range;
-	int i=0, meat = FAULT;
+	
+	int i=0, j=0, meat = FAULT, status = FAULT;
 	
 	if( ( semid = semget(*sKey, SEMAPHORE_SIZE, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == FAULT )
 	/* get the semaphore id for pits using the key to the pits */
@@ -47,15 +46,11 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 	/* If blocked, then process will be blocked,
 	otherwise will continue */
 
-	srand((unsigned int)time(NULL));	//see randomization with current time each time
-	//for(i=0;i<=10;i++){	//for testing
-	result = rand()/ factor; //% NO_OF_PITS) + 1;	/* choose randomly amongst the pit choices (1 - NO_OF_PITS) */
-    pitChoice = (int)(result * 100.0);
-    pitChoice = pitChoice % NO_OF_PITS;
+	pitChoice = randomlyChoosePit();
 
     /* FOR TESTING PURPOSES *
-    if( semctl(semid, 2*pitChoice + 1 , SETVAL, 44) == FAULT)
-	// making pit[pitChoice]'s access values to 0
+    if( semctl(semid, 2*pitChoice , SETVAL, 0) == FAULT)
+	// making pit[pitChoice]'s access value to 0
 	{
 		perror("Semctl(SETVAL) : ");
 		return FAULT;
@@ -75,17 +70,19 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 		if( semop( semid, &waitNSignal, 1) == FAULT)
 		{
 			perror("semop(wait) : ");
+			printf("Ranger denied access over meat pit %d\n", pitChoice + 1);
 		}
 		/*-----------------------------*/
 		else if( meat < 0 || meat > PIT_CAPACITY - FILL_VALUE )
 		{
-			printf("Meat not within limits, moving on...\n");
+			printf("Meat not within limits in pit %d, moving on...\n", pitChoice + 1);
 		}
 		else
 		{
 		/* Will enter critical section only when semop() above returns SUCCESS 
 			and meat value is within limits */
 			/* CRITICAL SECTION !! */
+			printf("Ranger in control of meat pit %d\n", pitChoice + 1);
 			food.sem_num = 2 * pitChoice + 1;
 			if( semop( semid, &food, 1) == FAULT)
 			{
@@ -99,10 +96,38 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 				/* SIGNAL (After critical section) */
 				waitNSignal.sem_op = 1;
 				waitNSignal.sem_flg = 0;
-				if( semop( semid, &waitNSignal, 1) == FAULT)
+
+				/* Send signal to waiting queues of all 3 pits */
+				for( j = 1; j <= NO_OF_PITS; j++)
 				{
-					perror("semop(signal) : ");
+					//printf("status of pit %d = %d\n", pitChoice + 1, getStatusValue( semid, pitChoice ) );
+
+					status = getStatusValue( semid, pitChoice );
+
+					if( status == FAULT)
+					{
+						printf("Sorry, the forest in on fire. Exiting...\n");
+						return FAULT;
+					}
+					else if( status < 1 )
+					/* Signal the wait queue of a pit only of the current status < 1
+					otherwise the status will accumulate to a value > 1 */
+					{
+						if( semop( semid, &waitNSignal, 1) == FAULT)
+						{
+							perror("semop(signal) : ");
+						}
+					}
+
+					//printf("status of pit %d = %d\n", pitChoice + 1, getStatusValue( semid, pitChoice ) );
+
+					pitChoice = (pitChoice + 1) % NO_OF_PITS;
+					waitNSignal.sem_num = 2*pitChoice;
 				}
+
+				/* for testing purposes *
+				printPitStatus(semid);
+				/*========================*/
 
 				break;
 			}
@@ -113,6 +138,7 @@ int be_a_ranger(key_t *sKey)		//main method for a ranger process
 		if(i == NO_OF_PITS - 1)
 		/* Check if the last iteration is coming up */
 		{
+			//printf("Setting semaphore flag as 0\n");
 			waitNSignal.sem_flg = 0;
 			/* Wait on the last pit if all NO_OF_PITS pits are busy */
 		}
