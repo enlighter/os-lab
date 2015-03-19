@@ -89,7 +89,8 @@ int getKey(key_t *candidate, int *semid)
 	{
 		/* We have to have 2 semaphores for each pit, one for controlling access and
 		the other for actual food value */
-		if( (*semid = semget((key_t) (i*10), SEMAPHORE_SIZE, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) ) == FAULT )
+		if( (*semid = semget((key_t) (i*10), SEMAPHORE_SIZE, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP 
+			| S_IWGRP | S_IROTH | S_IWOTH) ) == FAULT )
 		{
 			perror("Couldn't get semaphore: ");
 			return FAULT;
@@ -310,6 +311,8 @@ int instantiate(char* type, int instances)
 	else
 	/* section to be executed by all child processes */
 	{
+
+		/* TODO: IMPLEMENT CONTINUOUS OPERATION OF ALL PROCESS TYPES */
 		printf("%d:\n", getpid());
 
 		if( strcmp(type,"lion") == 0)
@@ -340,6 +343,7 @@ int instantiate(char* type, int instances)
 	return SUCCESS;
 }
 
-void signalHandler(int signr){
+void signalHandler(int signr)	/* Implement graceful exit */
+{
     printf("SIGINT system interrupt invoked [%d] ...\n", getpid());
 }
