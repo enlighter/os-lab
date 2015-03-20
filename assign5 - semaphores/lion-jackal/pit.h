@@ -19,6 +19,8 @@ The odd (2*i + 1) semphores are the meat values for (i+1)th pit*/
 
 typedef struct sembuf sBuf;
 
+/* These sBufs will be used by different process types simultaneously
+but the different processes will have their own values for them */
 sBuf food;	//sembuf variable to refill pit with food
 sBuf waitNSignal;	//sembuf variable to request and leave pit access
 
