@@ -29,4 +29,6 @@ int be_a_lion(key_t *sKey)		//main method for a lion process
 	{
 		printf("Ranger : Semaphore set got = %d, key = %d\n", semid, (int) *sKey );
 	}
+
+	pitChoice = randomlyChoosePit();
 }
