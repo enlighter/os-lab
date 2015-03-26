@@ -119,14 +119,14 @@ int randomlyChoosePit()	//Generate random number to choose a pit
 
 	srand((unsigned int)time(NULL));	//seed randomization with current time each time
 
-	for(i = 0; i < 10; i++){
+	//for(i = 0; i < 10; i++){
 	result = rand()/ factor;
     choice = (int)(result * 100.0);
     
     //printf("choice = %d\n", choice);
     choice = choice % NO_OF_PITS;
     //printf("choice = %d\n", choice);
-	}
+	//}
 
     return choice;
 }

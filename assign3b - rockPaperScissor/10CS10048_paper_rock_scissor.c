@@ -205,7 +205,14 @@ int main()
 
 int participant()
 {
+	double result = FAULT;
+	int choice = FAULT;
+	float factor = ((float) RAND_MAX + 1) / 3;
 
+	srand((unsigned int)time(NULL));	//seed randomization with current time each time
+	result = rand()/ factor;
+    choice = (int)(result * 100.0);
+    choice = choice % NO_OF_PITS;
 }
 
 int mediate(int hand1, int hand2)
