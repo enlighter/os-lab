@@ -11,10 +11,10 @@
 #include <sys/wait.h>
 
 #define SOCKNAME "sockunix"
-bool ende = false;
+bool end = false;
 void sigfkt(int signr){
     printf("SIGINT empfangen ...\n");
-    ende = true;
+    end = true;
 }
 
 int main(){
@@ -67,7 +67,7 @@ sigset(SIGINT, sigfkt);
 printf("Warte auf Client-Anforderungen ....\n"); //cho client ket noi toi
 do{ 
     sockd2 = accept(sockd, 0, 0);
-    if(ende)
+    if(end)
         break;
     if(sockd2<0){
         perror("accept");
@@ -100,7 +100,7 @@ printf("fd=%d\n",*p);
         perror("sendmsg");
     }
     close(sockd2);
-}while(!ende);
+}while(!end);
 
 close(sockd);
 unlink(uxadr.sun_path);
