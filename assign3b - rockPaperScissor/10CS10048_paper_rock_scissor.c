@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>	/* Include this file to use pipes */
 #include <time.h>	/* randomize using time */
+#include <stdbool.h> /* for using bool type variables */
 #include <sys/mman.h> /* header for shared memory creation */
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -19,7 +20,7 @@
 
 int fdc[2], fdd[2];		//pipes for communicating with child c & d respectively
 char line[BUFSIZE];
-int *cPID = NULL, *dPID = NULL;	//for differentiatiing between the processes
+bool isC = 0, isD = 0;	//for differentiatiing between the processes
 float cPoints = 0, dPoints = 0;	//game points for the two participants
 
 
@@ -41,10 +42,14 @@ int master()		//host of the game
 	int handC = 0, handD = 0;		//hands of the participants in one turn
 	int mediator = -100;			//determines the game status
 
-	cPID = mmap(NULL, sizeof *cPID, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);	//creating shared memory for parent-child processes with fork()
-	dPID = mmap(NULL, sizeof *dPID, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);	//creating shared memory for parent-child processes with fork()
+	/* isC = mmap(NULL, sizeof *isC, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);	/*creating shared 
+	memory for parent-child processes with fork()*/
+	/* isD = mmap(NULL, sizeof *isD, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);	/*creating shared 
+	memory for parent-child processes with fork()*/
 
-	printf("cPID = %d, dPID = %d\n", *cPID, *dPID);
+	isC = isD = 0;
+
+	printf("isC = %d, isD = %d\n", isC, isD);
 
 	pipe(fdc);
 	pipe(fdd);
@@ -55,9 +60,10 @@ int master()		//host of the game
 	{
 		printf("C is born! [%d]\n", getpid());
 
-		*cPID = getpid();
+		isC = 1;
 
-		printf("cPID = %d\n", *cPID);
+		printf("isC = %d\n", isC);
+		printf("isD = %d\n", isD);
 
 		close(fdc[0]); /* The child will not read and
 				     hence we close fdc[0] */
@@ -74,9 +80,10 @@ int master()		//host of the game
 		{
 			printf("D is born! [%d]\n", getpid());
 
-			*dPID = getpid();
+			isD = 1;
 
-			printf("dPID = %d\n", *dPID);
+			printf("isC = %d\n", isC);
+			printf("isD = %d\n", isD);
 
 			close(fdd[0]); /* The child will not read and
 				     hence we close fdd[0] */
@@ -122,16 +129,18 @@ int master()		//host of the game
 		}
 		else			//P (master) executing
 		{
-			printf("Master : cPID = %d, dPID = %d\n", *cPID, *dPID);
+			printf("Master : isC = %d, isD = %d\n", isC, isD);
 
-			while(*cPID == 0 || *dPID == 0)	//wait till children are created
+			while(pidC == FAULT || pidD == FAULT)	//wait till children are created
 			{
-				printf("Waiting for children to be created... : cPID = %d, dPID = %d \n", *cPID, *dPID);
+				printf("Waiting for children to be created... : pidC = %d, pidD = %d \n", pidC, pidD);
 			}
 
-			printf("Master: Out of loop : cPID = %d, dPID = %d\n", *cPID, *dPID);			
+			printf("Master: Out of loop : pidC = %d, pidD = %d\n", pidC, pidD);			
 			
+			printf("Master: Sending stop signal to C\n");
       		kill(pidC, SIGTSTP);        /* Send stop signal to C */
+      		printf("Master: Sending stop signal to D\n");
       		kill(pidD, SIGTSTP);        /* Send stop signal to D */
 
 			printf("Master hosting the game: %d\n", getpid());
@@ -212,7 +221,33 @@ int participant()
 	srand((unsigned int)time(NULL));	//seed randomization with current time each time
 	result = rand()/ factor;
     choice = (int)(result * 100.0);
-    choice = choice % NO_OF_PITS;
+    choice = (choice % 3) + 1;
+
+    printf("Generated random number = %d\n", choice);
+
+    if(isC)
+    {
+    	printf("C sending choice %d to master\n", choice);
+    	sprintf(line,"%d",choice); /* Since write() accepts only
+						       arrays of bytes, we
+						       first write the integer n
+						       into the char array "line"
+					          */
+    	write(fdc[1], line, BUFSIZE);
+    	return SUCCESS;
+    }
+    if(isD)
+    {
+    	printf("D sending choice %d to master\n", choice);
+    	sprintf(line,"%d",choice); /* Since write() accepts only
+						       arrays of bytes, we
+						       first write the integer n
+						       into the char array "line"
+					          */
+    	write(fdd[1], line, BUFSIZE);
+    	return SUCCESS;
+    }
+
 }
 
 int mediate(int hand1, int hand2)
