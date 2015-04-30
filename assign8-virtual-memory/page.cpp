@@ -5,7 +5,7 @@
 // #include <stdexcept>
 // #include <cerrno>
 //#include "page.h"
-#include "pageH.cpp"
+#include "pageH.cpp" /* contains the class definitions */
 
 using namespace std;
 
@@ -27,22 +27,22 @@ int main()
 	{
 		case 1:
 		{
-			simulator.fifo();
+			//simulator.fifo();
 			break;
 		}
 		case 2:
 		{
-			simulator.lfu();
+			//simulator.lfu();
 			break;
 		}
 		case 3:
 		{
-			simulator.lru();
+			//simulator.lru();
 			break;
 		}
 		case 4:
 		{
-			simulator.sca();
+			//simulator.sca();
 			break;
 		}
 		default:
